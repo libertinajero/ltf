@@ -213,6 +213,10 @@ a.tile b{font-family:var(--display);font-size:22px;text-transform:uppercase;lett
 .prog i{display:block;height:100%;width:40%;background:var(--celeste);animation:pg 1.1s ease-in-out infinite alternate}
 @keyframes pg{from{margin-left:0}to{margin-left:60%}}
 .stage{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+#vbox:fullscreen{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:0;background:var(--bg)}
+#vbox:-webkit-full-screen{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:0;background:var(--bg)}
+#vbox:fullscreen h2,#vbox:-webkit-full-screen h2{display:none}
+#vbox:fullscreen .stage,#vbox:-webkit-full-screen .stage{flex:1;aspect-ratio:auto;min-height:0}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 </style>
 </head>
@@ -246,7 +250,7 @@ function css(n){return getComputedStyle(document.documentElement).getPropertyVal
 /* =====================================================================
    Estado
    ===================================================================== */
-var TABS=[["inicio","Inicio"],["subir","Subir partido"],["partidos","Partidos"],["tabla","Tabla"],["goleadores","Goleadores"],["equipos","Equipos"]];
+var TABS=[["inicio","Inicio"],["subir","Subir partido"],["partidos","Replays"],["tabla","Tabla"],["goleadores","Goleadores"],["equipos","Equipos"]];
 var SUBS=[["rep","Ver partido"],["par","Comparativa"],["res","Alineaciones"],["jug","Jugadores"],["gol","Goles"],["pas","Pases"],["adv","Avanzado"],["cal","Mapas de calor"],["chat","Chat"],["eve","Cronología"],["per","Perfiles"]];
 function blankUp(){return {title:"",round:"",t1:"",t2:"",status:"",bad:false,busy:false,M:null,buf:null}}
 var S={teams:[],matches:[],role:"",code:"",canWrite:false,isAdmin:false,loaded:false,err:"",tab:"inicio",
@@ -597,12 +601,9 @@ function vInicio(){
   var n=S.matches.length;
   return '<section class="landing hero-ar"><span class="pill2">LTF · Temporada 1</span><h1 class="big">Mirá cada partido <span>como si estuvieras en la cancha</span></h1>'+
     '<p class="sub">Subí el .hbr2 de tu partido y la sala lo procesa: goles, figura, mapas de calor y la repetición completa, con un link para compartir.</p>'+
-    '<div class="cta"><a class="btn primary" href="#subir">Subir mi partido</a><a class="btn ghost" href="#partidos">Ver partidos</a></div></section>'+
-    '<div class="tiles"><a class="tile" href="#subir"><b>Subir partido</b><span>Del .hbr2 al link en un paso</span></a>'+
-    '<a class="tile" href="#partidos"><b>Partidos</b><span>'+n+' jugado'+(n===1?"":"s")+' en la liga</span></a>'+
-    '<a class="tile" href="#tabla"><b>Tabla</b><span>Quién va arriba</span></a>'+
-    '<a class="tile" href="#goleadores"><b>Goleadores</b><span>Los que más la mueven</span></a></div>'+
-    (n?'<h2>Últimos partidos</h2><div class="mlist">'+S.matches.slice(0,6).map(mcard).join("")+'</div>':"");
+    '<div class="cta"><a class="btn primary" href="#subir">Subir mi partido</a><a class="btn ghost" href="#partidos">Ver replays</a></div></section>'+
+    '<div class="tiles"><a class="tile" href="#subir"><b>Subir partido</b></a><a class="tile" href="#partidos"><b>Replays</b></a><a class="tile" href="#tabla"><b>Tabla</b></a><a class="tile" href="#goleadores"><b>Goleadores</b></a></div>'+
+    (n?'<h2>Últimos replays</h2><div class="mlist">'+S.matches.slice(0,6).map(mcard).join("")+'</div>':"");
 }
 function vTabla(){
   var rows=standings();
@@ -724,8 +725,8 @@ function tabRep(M){
     return empty("Cargando repetición…","Un momento.");
   }
   var b=A.b;
-  return '<div class="panel"><h2>Repetición</h2><div class="stage"><canvas id="vc"></canvas></div>'+
-    '<div class="vctl"><button type="button" id="vp">Reproducir</button><button type="button" id="vz" title="Volver al inicio">⏮</button><button type="button" id="vf" title="Pantalla completa">⛶</button>'+
+  return '<div class="panel" id="vbox"><h2>Repetición</h2><div class="stage"><canvas id="vc"></canvas></div>'+
+    '<div class="vctl"><button type="button" id="vp" aria-label="Reproducir o pausar">▶</button><button type="button" id="vz" title="Volver al inicio">⏮</button><button type="button" id="vf" title="Pantalla completa">⛶</button>'+
     '<div class="grow"><label for="vr" class="sr">Línea de tiempo</label><input id="vr" type="range" min="0" max="'+(RP.maxF||1)+'" value="0"></div>'+
     '<select id="vs" aria-label="Velocidad"><option value="0.5">0.5x</option><option value="1">1x</option><option value="2">2x</option><option value="4">4x</option></select></div>'+
     '<p class="note" id="vt">Cargando el motor de HaxBall…</p></div>';
@@ -781,7 +782,7 @@ function fwd(n){return function(){var d=RP.rend;if(d&&d[n]){try{d[n].apply(d,arg
 function mkReader(buf){return getAPI().then(function(A){
   var r=A.Replay.read(new Uint8Array(buf),{onTeamGoal:fwd("onTeamGoal"),onGameStart:fwd("onGameStart"),onGameEnd:fwd("onGameEnd"),onTimeIsUp:fwd("onTimeIsUp"),onPlayerChatIndicatorChange:fwd("onPlayerChatIndicatorChange")});
   r.setSpeed(0);
-  r.onEnd=function(){RP.playing=false;RP.ended=true;var p=$("vp");if(p)p.textContent="Reproducir"};return r})}
+  r.onEnd=function(){RP.playing=false;RP.ended=true;var p=$("vp");if(p)p.textContent="▶"};return r})}
 function kick(){if(!RP.raf)RP.raf=requestAnimationFrame(tick)}
 function restart(f,play){
   var buf=RP.buf;cancelAnimationFrame(RP.raf);RP.raf=0;try{if(RP.r)RP.r.destroy()}catch(e){}RP.r=null;RP.rend=null;RP.mk=true;RP.ended=false;RP.seek=null;
@@ -791,7 +792,7 @@ function restart(f,play){
     RP.mk=false;RP.r=r;RP.maxF=r.maxFrameNo||RP.maxF;RP.playing=!!play;
     mkRend();
     if(f>0){RP.seek=f;r.setSpeed(60);r.setCurrentFrameNo(f)}else r.setSpeed(play?RP.speed:0);
-    var sl=$("vr");if(sl)sl.max=RP.maxF;var p=$("vp");if(p)p.textContent=RP.playing?"Pausar":"Reproducir";kick();
+    var sl=$("vr");if(sl)sl.max=RP.maxF;var p=$("vp");if(p)p.textContent=RP.playing?"❚❚":"▶";kick();
   }).catch(function(e){RP.mk=false;var t=$("vt");if(t)t.textContent="No se pudo iniciar la repetición ("+((e&&e.message)||e)+")."});
 }
 function tick(){
@@ -806,14 +807,14 @@ function tick(){
 function wireViewer(){
   var c=$("vc");if(!c||!CM||!CM.rbuf)return;
   if(RP.buf!==CM.rbuf){killPlayer();RP.buf=CM.rbuf}
-  $("vp").textContent=RP.playing?"Pausar":"Reproducir";$("vs").value=String(RP.speed);$("vr").max=RP.maxF;
+  $("vp").textContent=RP.playing?"❚❚":"▶";$("vs").value=String(RP.speed);$("vr").max=RP.maxF;
   $("vp").onclick=function(){
     if(RP.mk)return;
     if(!RP.r||RP.ended){restart(0,true);return}
-    RP.playing=!RP.playing;if(RP.seek==null)RP.r.setSpeed(RP.playing?RP.speed:0);this.textContent=RP.playing?"Pausar":"Reproducir";
+    RP.playing=!RP.playing;if(RP.seek==null)RP.r.setSpeed(RP.playing?RP.speed:0);this.textContent=RP.playing?"❚❚":"▶";
   };
   $("vz").onclick=function(){if(!RP.mk)restart(0,false)};
-  $("vf").onclick=function(){var e=$("vc").parentElement;(e.requestFullscreen||e.webkitRequestFullscreen||function(){}).call(e)};
+  $("vf").onclick=function(){var e=$("vbox");(e.requestFullscreen||e.webkitRequestFullscreen||function(){}).call(e)};
   $("vr").onchange=function(){
     var f=+this.value,r=RP.r;if(!r||RP.mk)return;
     if(f<r.getCurrentFrameNo())restart(f,RP.playing);else{RP.seek=f;r.setSpeed(60);r.setCurrentFrameNo(f)}
