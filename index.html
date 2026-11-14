@@ -1454,18 +1454,17 @@ function vPartido(){
    Subir un replay
    ===================================================================== */
 function vSubir(){
-  if(!S.canWrite)return codeBox("Para subir partidos ingresá el código de capitán que te pasó el admin de la liga.");
   var up=S.up;CM=null;
   var st='<p class="status'+(up.bad?" bad":"")+'" id="status" role="status">'+esc(up.status||"")+'</p>';
-  var head='<section class="steps"><span class="pill2">Subir partido</span><h1 class="big">Cargá tu <span>replay</span></h1><p class="sub">Elegí el .hbr2, ponele nombre y listo: cuando termina de procesarse te llevo a la página del partido para que compartas el link.</p></section>';
+  var head='<section class="steps"><span class="pill2">Subir partido</span><h1 class="big">Cargá tu <span>replay</span></h1><p class="sub">Elegí el .hbr2, ponele nombre y listo: cuando termina de procesarse te llevo a la página del partido para que compartas el link.'+(S.canWrite?'':' Cualquiera puede subir; los replays públicos quedan como replay suelto y no suman a la tabla.')+'</p></section>';
   if(!up.buf)return head+'<div class="panel"><label class="drop" id="drop" for="file"><strong>Arrastrá el .hbr2 de tu partido</strong><span class="sub">o tocá para elegirlo</span><input id="file" type="file" accept=".hbr2" hidden></label>'+st+'</div>';
   var opts=function(sel){return '<option value="">Sin equipo de la liga</option>'+S.teams.map(function(t){return '<option value="'+esc(t.id)+'"'+(t.id===sel?" selected":"")+'>'+esc(t.name)+'</option>'}).join("")};
   var ok=!up.busy&&((!up.t1&&!up.t2)||(up.t1&&up.t2&&up.t1!==up.t2));
   return head+'<div class="panel formcard"><div class="chip"><span>📄 '+esc(up.file||"replay.hbr2")+'</span><button type="button" data-act="resetfile"'+(up.busy?" disabled":"")+'>Cambiar</button></div>'+
     '<div><label for="ut">Nombre del partido</label><input id="ut" type="text" data-u="title" value="'+esc(up.title)+'"></div>'+
     '<div><label for="ur">Fecha número (opcional)</label><input id="ur" type="number" min="1" max="99" data-u="round" value="'+esc(up.round)+'"></div>'+
-    '<div class="grid2"><div><label for="u1">Equipo rojo</label><select id="u1" data-u="t1">'+opts(up.t1)+'</select></div><div><label for="u2">Equipo azul</label><select id="u2" data-u="t2">'+opts(up.t2)+'</select></div></div>'+
-    '<p class="note" style="margin:0">Si elegís los dos equipos, el partido usa sus colores y escudos y suma en la tabla. Si no, queda como replay suelto.</p>'+
+    (S.canWrite?'<div class="grid2"><div><label for="u1">Equipo rojo</label><select id="u1" data-u="t1">'+opts(up.t1)+'</select></div><div><label for="u2">Equipo azul</label><select id="u2" data-u="t2">'+opts(up.t2)+'</select></div></div>'+
+    '<p class="note" style="margin:0">Si elegís los dos equipos, el partido usa sus colores y escudos y suma en la tabla. Si no, queda como replay suelto.</p>':'<p class="note" style="margin:0">Se publica como replay suelto (Rojo vs Azul). Si es un partido oficial de la liga, pedile a un capitán que lo suba con su código para que sume en la tabla.</p>')+
     (up.busy?'<div class="prog"><i></i></div>':"")+
     '<button type="button" class="primary" data-act="analyze"'+(ok?"":" disabled")+'>'+(up.busy?"Procesando…":"Procesar y publicar")+'</button>'+st+'</div>';
 }
@@ -1487,6 +1486,7 @@ function runAnalysis(){
 }
 function saveUpload(){
   var up=S.up,M=up.M;if(!M||up.busy)return;
+  var pub=!S.canWrite;if(pub){M.t1=null;M.t2=null;up.round=""}
   var t1=teamById(M.t1),t2=teamById(M.t2),A=M.A;
   up.busy=true;render();
   var title=(up.title||"").trim()||((t1?t1.name:"Rojo")+" vs "+(t2?t2.name:"Azul")+(up.round?" | Fecha "+up.round:""));
@@ -1494,13 +1494,13 @@ function saveUpload(){
     g1:goalStrings(A,1),g2:goalStrings(A,2),title:title,stats:A,meta:{mvp:A.mvp,dur:A.dur,np:A.players.length,poss:A.poss}};
   var withReplay=up.buf&&up.buf.byteLength<=2000000;
   if(withReplay)payload.replay=b64enc(up.buf);
-  api.rpc("add_match",{code:S.code,p:payload}).then(function(id){
+  (pub?api.rpc("add_match_open",{p:payload}):api.rpc("add_match",{code:S.code,p:payload})).then(function(id){
     S.up=blankUp();S.banner="saved";
     return loadAll(true).then(function(){location.hash="partido-"+id});
   }).catch(function(err){
     up.busy=false;up.bad=true;
     var m=(err&&err.message)||"error";
-    up.status=/demasiado/i.test(m)?"El partido es muy grande para la base de datos actual. Falta ejecutar migracion.sql en Supabase.":"No se pudo guardar ("+m+"). Revisá que tu código siga siendo válido.";
+    up.status=/demasiado/i.test(m)?"El partido es muy grande para la base de datos actual. Falta ejecutar migracion.sql en Supabase.":(pub?"No se pudo guardar ("+m+"). Probá de nuevo en un rato.":"No se pudo guardar ("+m+"). Revisá que tu código siga siendo válido.");
     render();
   });
 }
