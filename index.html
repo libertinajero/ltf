@@ -429,7 +429,7 @@ function buildAnalysis(R){
     });
     var pc=o.pp+o.pl;
     return {id:o.id,n:o.n,tm:o.s1>=o.s2?1:2,min:Math.round(mins*10)/10,touches:o.touches,passes:pc,pok:o.pp,
-      pct:pc?Math.round(o.pp/pc*100):null,goals:o.goals,ast:o.ast,og:o.og,r:null,heat:h};
+      pct:pc?Math.round(o.pp/pc*100):null,goals:o.goals,ast:o.ast,og:o.og,av:(R.AV&&R.AV[o.id])||"",r:null,heat:h};
   }).filter(function(p){return p.min>=0.2||p.touches>0||p.goals>0||p.ast>0||p.og>0});
   var avg={1:0,2:0},cnt={1:0,2:0};
   plist.forEach(function(p){if(p.min>=1){avg[p.tm]+=p.touches/p.min;cnt[p.tm]++}});
@@ -456,7 +456,7 @@ function buildAnalysis(R){
   var pt=R.poss[1]+R.poss[2],p1=pt?Math.round(R.poss[1]/pt*100):50;
   var adv=advanced(R,plist,orient,bx,by,dur);
   return {v:2,dur:dur,b:[bx,by],map:map,poss:[p1,100-p1],orient:orient,s1:s1,s2:s2,goals:R.goals,players:plist,
-    mvp:mvp?{id:mvp.id,n:mvp.n,r:mvp.r,tm:mvp.tm}:null,mom:mom,step:step,chat:R.chat,gw:GW,gh:GH,adv:adv};
+    mvp:mvp?{id:mvp.id,n:mvp.n,r:mvp.r,tm:mvp.tm}:null,mom:mom,step:step,kit:R.KIT||{},chat:R.chat,gw:GW,gh:GH,adv:adv};
 }
 
 /* Estadísticas avanzadas: remates, xG (aproximado), xA, pases clave, +/-, posición, perfiles y eventos. */
@@ -555,7 +555,7 @@ function analyze(buf){
     /* Cada acumulador tiene su propio reloj, que solo corre desde el saque hasta cada gol (como el cronómetro de HaxBall).
        ALL es el partido completo; cada vez que el juego arranca de nuevo se abre un "partido" aparte. */
     function newAcc(){return {clk:0,frames:[],P:{},kicks:[],goals:[],poss:[0,0,0],votes:0,lastKick:null,f0:0,iv:[]}}
-    var ALL=newAcc(),segs=[],cur=null,running=false,seenK=false,map=null,mapTried=false,chat=[],reader,timer,J={},adm={},MS={};
+    var ALL=newAcc(),segs=[],cur=null,running=false,seenK=false,map=null,mapTried=false,chat=[],reader,timer,J={},adm={},MS={},AV={},KIT={};
     function fno(){try{var f=reader.getCurrentFrameNo();return typeof f==="number"?f:null}catch(e){return null}}
     function each(fn){fn(ALL);if(cur)fn(cur)}
     /* intervalos de frames en que el reloj del partido corre (del saque hasta el gol); sirven para mostrar bien el reloj y el marcador al adelantar */
@@ -570,9 +570,16 @@ function analyze(buf){
       var st=reader.state,gs=st.gameState,ph=gs&&gs.physicsState;if(!ph||!ph.discs)return;
       if(!mapTried){mapTried=true;map=extractMap(A,reader)}
       var bp=pos(ph.discs[0]);if(!bp)return;
+      try{[1,2].forEach(function(t){
+        if(KIT[t])return;var tcs=(gs&&gs.teamColors)||st.teamColors,c=tcs&&tcs[t];if(!c)return;
+        var hx=function(v){return typeof v==="number"?"#"+("000000"+(v&16777215).toString(16)).slice(-6):null};
+        var ins=(c.inner||c.colors||[]).map(hx).filter(Boolean);if(!ins.length)return;
+        KIT[t]={a:+c.angle||0,t:hx(c.text)||"#ffffff",c:ins};
+      })}catch(e){}
       var L=[];
       playersOf(st).forEach(function(p){
         var tm=teamOf(p);if(tm!==1&&tm!==2)return;
+        if(p.avatar!=null&&p.avatar!=="")AV[p.id]=String(p.avatar);
         var dd=typeof p.disc==="number"?ph.discs[p.disc]:p.disc,dp=pos(dd);if(!dp)return;
         L.push({p:p,tm:tm,dp:dp});
       });
@@ -586,7 +593,7 @@ function analyze(buf){
         a.frames.push(f);
       });
     }
-    function mkR(a,partial){return {frames:a.frames,P:a.P,goals:a.goals,chat:partial?[]:chat,poss:a.poss,map:map,votes:a.votes,ticks:a.clk,kicks:a.kicks,J:partial?{}:J,adm:partial?{}:adm,MS:partial?{}:MS}}
+    function mkR(a,partial){return {frames:a.frames,P:a.P,goals:a.goals,chat:partial?[]:chat,AV:AV,KIT:KIT,poss:a.poss,map:map,votes:a.votes,ticks:a.clk,kicks:a.kicks,J:partial?{}:J,adm:partial?{}:adm,MS:partial?{}:MS}}
     function finish(partial){
       clearTimeout(timer);try{reader.destroy()}catch(e){}
       try{
@@ -788,7 +795,7 @@ function scorerList(M,tm){
 }
 function momentumHTML(M){
   var A=M.A;if(!A||!A.mom||A.mom.length<2)return "";
-  var W=760,H=130,L=14,R=14,mid=58,amp=50,n=A.mom.length,iw=W-L-R,dur=Math.max(A.dur,1);
+  var W=760,H=164,L=14,R=14,mid=58,amp=50,n=A.mom.length,iw=W-L-R,dur=Math.max(A.dur,1);
   var a=sideTeam(M,1),b=sideTeam(M,2),X=function(i){return L+i/(n-1)*iw};
   var up="M"+X(0)+","+mid,dn="M"+X(0)+","+mid,i;
   for(i=0;i<n;i++){up+=" L"+X(i).toFixed(1)+","+(mid-Math.max(A.mom[i],0)*amp).toFixed(1);dn+=" L"+X(i).toFixed(1)+","+(mid+Math.max(-A.mom[i],0)*amp).toFixed(1)}
@@ -803,9 +810,29 @@ function momentumHTML(M){
   for(var hf=0;hf<2;hf++){
     for(tt=120;tt<half-30;tt+=120){x=L+(hf*half+tt)/dur*iw;s+='<text x="'+x.toFixed(1)+'" y="'+(H-3)+'" font-size="11" text-anchor="middle" fill="'+mc+'">'+Math.round(tt/60)+"'</text>"}
   }
-  A.goals.forEach(function(g){
-    var x=L+clamp(g.t/dur,0,1)*iw,col=g.tm===1?a.color:b.color;
-    s+='<circle cx="'+x.toFixed(1)+'" cy="'+(H-26)+'" r="6" fill="'+(g.og?"none":"#ffffff")+'" stroke="'+esc(col)+'" stroke-width="3"/>';
+  var best={};
+  [1,2].forEach(function(tm){
+    var bp=null;A.players.forEach(function(p){
+      if(p.tm!==tm)return;
+      if(!bp||(p.r==null?-1:p.r)>(bp.r==null?-1:bp.r)||((p.r==null?-1:p.r)===(bp.r==null?-1:bp.r)&&p.goals+p.ast>bp.goals+bp.ast))bp=p;
+    });best[tm]=bp;
+  });
+  var cy=H-36,SR=17,BR=10.5;
+  A.goals.forEach(function(g,gi){
+    var x=+(L+clamp(g.t/dur,0,1)*iw).toFixed(1),T=g.tm===1?a:b,col=T.color,bp=best[g.tm],id="mk"+gi;
+    var kit=(A.kit&&A.kit[g.tm])||{a:0,t:"#ffffff",c:[col]};
+    var av=bp&&bp.av?bp.av:(bp&&bp.n?String(bp.n).charAt(0).toUpperCase():"");
+    /* sombra y escudo detrás */
+    s+='<circle cx="'+x+'" cy="'+cy+'" r="'+(SR+1)+'" fill="rgba(0,0,0,.35)"/>';
+    if(T.logo)s+='<image href="'+esc(T.logo)+'" x="'+(x-SR)+'" y="'+(cy-SR)+'" width="'+SR*2+'" height="'+SR*2+'" preserveAspectRatio="xMidYMid meet"/>';
+    else s+='<circle cx="'+x+'" cy="'+cy+'" r="'+SR+'" fill="'+esc(col)+'" opacity=".85"/><text x="'+x+'" y="'+(cy-SR+8)+'" font-size="8" font-weight="700" text-anchor="middle" fill="#fff" opacity=".8">'+esc(initials(T.name))+'</text>';
+    /* pelotita con camiseta y avatar del mejor jugador */
+    var n=kit.c.length,sw=BR*2/n,k;
+    s+='<clipPath id="'+id+'"><circle cx="'+x+'" cy="'+cy+'" r="'+BR+'"/></clipPath><g clip-path="url(#'+id+')"><g transform="rotate('+kit.a+' '+x+' '+cy+')">';
+    for(k=0;k<n;k++)s+='<rect x="'+(x-BR+k*sw-0.3).toFixed(2)+'" y="'+(cy-BR*2)+'" width="'+(sw+0.6).toFixed(2)+'" height="'+BR*4+'" fill="'+esc(kit.c[k])+'"/>';
+    s+='</g></g><circle cx="'+x+'" cy="'+cy+'" r="'+BR+'" fill="none" stroke="#fff" stroke-width="2"'+(g.og?' stroke-dasharray="3 2"':'')+'/>';
+    if(av)s+='<text x="'+x+'" y="'+(cy+0.5)+'" font-size="'+(av.length>2?8:10)+'" font-weight="800" text-anchor="middle" dominant-baseline="central" fill="'+esc(kit.t)+'" stroke="rgba(0,0,0,.45)" stroke-width="2.2" paint-order="stroke" stroke-linejoin="round">'+esc(av)+'</text>';
+    if(g.og)s+='<text x="'+x+'" y="'+(cy+SR+9)+'" font-size="8" font-weight="700" text-anchor="middle" fill="#ff8a7a">AG</text>';
   });
   return s+'</svg>';
 }
