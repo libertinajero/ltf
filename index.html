@@ -6,16 +6,16 @@
 <meta name="theme-color" content="#05070b">
 <title>LTF Replays</title>
 <link rel="icon" href="logo.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
 <style>
 /* Layout: una columna. Banda de la liga, navegación, y debajo la vista activa.
    La página de un partido sigue el orden de MrREPLAY: cabecera, tarjeta con marcador y momentum, pestañas de detalle. */
 :root{
   --bg:#03060f; --card:#0b1220; --ink:#eef2f7; --muted:#8a96a6; --line:#1c2431; --row:#111723;
-  --chalk:#dfe8f3; --accent:#e9b949; --accent-ink:#1a1200; --warn:#f0a35e; --sun:#f6b40e; --celeste:#74acdf;
+  --chalk:#dfe8f3; --accent:#74acdf; --accent-ink:#04101c; --warn:#f0a35e; --sun:#f6b40e; --celeste:#74acdf;
   --c1:#d8483b; --c2:#3f7be0; color-scheme:dark;
-  --display:"Space Grotesk",system-ui,sans-serif;
-  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -190,28 +190,30 @@ input[type=color]{width:46px;height:38px;padding:2px;border:1px solid var(--line
   .scorers{padding:4px 12px 12px;font-size:13px}.hero .t{font-size:19px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-/* estilo MrReplay */
-.brand{background:none;border:0;border-radius:0;padding:4px 0}
-.brand h1{font-size:26px;text-transform:none;letter-spacing:0}
-nav{justify-content:center}
-nav button{border-radius:999px;text-transform:none;letter-spacing:0;font-size:15px;font-weight:600}
-nav#subnav{justify-content:flex-start}
+/* estilo celeste y blanco */
+body{background:radial-gradient(900px 420px at 50% -140px,rgba(116,172,223,.22),transparent 70%),var(--bg)}
 .btn{text-decoration:none;display:inline-block}
 a.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-h1.big{font-size:44px;text-transform:none;letter-spacing:-.01em;text-align:center;line-height:1.05}
+a.btn.ghost{border-color:#fff;color:#fff;background:transparent}
+button.primary,a.btn.primary{box-shadow:0 6px 18px -8px rgba(116,172,223,.9)}
+h1.big{font-size:46px;line-height:1;text-align:center;text-transform:uppercase;letter-spacing:.02em;text-wrap:balance}
+h1.big span{color:var(--celeste)}
 .landing,.steps{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:26px 0 6px}
 .landing .sub,.steps .sub{max-width:560px}
-.pill2{border:1px solid rgba(233,185,73,.5);color:var(--accent);border-radius:999px;font-size:12px;font-weight:600;padding:3px 12px;letter-spacing:.06em;text-transform:uppercase}
+.hero-ar{border:1px solid var(--line);border-radius:16px;padding:34px 18px;background:repeating-linear-gradient(90deg,rgba(116,172,223,.14) 0 64px,rgba(255,255,255,.05) 64px 128px),linear-gradient(180deg,#0b1730,#0b1220)}
+.pill2{border:1px solid var(--sun);color:var(--sun);border-radius:999px;font-size:12px;font-weight:600;padding:3px 12px;letter-spacing:.08em;text-transform:uppercase}
 .cta{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
-a.tile{display:flex;flex-direction:column;gap:4px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);text-decoration:none}
-a.tile:hover{border-color:var(--accent)}
-a.tile b{font-family:var(--display);font-size:18px}a.tile span{color:var(--muted);font-size:13px}
+a.tile{display:flex;flex-direction:column;gap:4px;padding:16px;border:1px solid var(--line);border-left:4px solid var(--celeste);border-radius:10px;background:var(--card);color:var(--ink);text-decoration:none}
+a.tile:hover{border-color:var(--celeste)}
+a.tile b{font-family:var(--display);font-size:22px;text-transform:uppercase;letter-spacing:.03em}a.tile span{color:var(--muted);font-size:13px}
 .formcard{max-width:520px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:12px}
-.chip{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:4px 6px 4px 12px;overflow-wrap:anywhere}
+.chip{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--celeste);border:1px solid var(--line);border-radius:999px;padding:4px 6px 4px 12px;overflow-wrap:anywhere}
 .prog{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
-.prog i{display:block;height:100%;width:40%;background:var(--accent);animation:pg 1.1s ease-in-out infinite alternate}
+.prog i{display:block;height:100%;width:40%;background:var(--celeste);animation:pg 1.1s ease-in-out infinite alternate}
 @keyframes pg{from{margin-left:0}to{margin-left:60%}}
+.stage{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 </style>
 </head>
 <body>
@@ -244,8 +246,8 @@ function css(n){return getComputedStyle(document.documentElement).getPropertyVal
 /* =====================================================================
    Estado
    ===================================================================== */
-var TABS=[["inicio","Inicio"],["subir","Analizar"],["partidos","Replays"],["tabla","Tabla"],["goleadores","Goleadores"],["equipos","Equipos"]];
-var SUBS=[["rep","Repetición"],["par","Partido"],["res","Resumen"],["jug","Jugadores"],["gol","Goles"],["pas","Pases"],["adv","Avanzado"],["cal","Mapas de calor"],["chat","Chat"],["eve","Eventos"],["per","Perfiles"]];
+var TABS=[["inicio","Inicio"],["subir","Subir partido"],["partidos","Partidos"],["tabla","Tabla"],["goleadores","Goleadores"],["equipos","Equipos"]];
+var SUBS=[["rep","Ver partido"],["par","Comparativa"],["res","Alineaciones"],["jug","Jugadores"],["gol","Goles"],["pas","Pases"],["adv","Avanzado"],["cal","Mapas de calor"],["chat","Chat"],["eve","Cronología"],["per","Perfiles"]];
 function blankUp(){return {title:"",round:"",t1:"",t2:"",status:"",bad:false,busy:false,M:null,buf:null}}
 var S={teams:[],matches:[],role:"",code:"",canWrite:false,isAdmin:false,loaded:false,err:"",tab:"inicio",
   cur:null,curMsg:"",mtab:"rep",sort:{k:"r",d:-1},pf:0,pr:0,sf:0,heat:"t1",up:blankUp(),E:{id:"",name:"",color:"#2f66c9",logo:""},
@@ -593,14 +595,14 @@ function b64dec(str){var s=atob(str),u=new Uint8Array(s.length),i;for(i=0;i<s.le
    ===================================================================== */
 function vInicio(){
   var n=S.matches.length;
-  return '<section class="landing"><span class="pill2">LTF · Temporada 1</span><h1 class="big">Analizador de replays de HaxBall</h1>'+
-    '<p class="sub">Subí tu .hbr2 y obtené goles, calificaciones, mapas de calor y la repetición original del partido, con un link para compartir.</p>'+
-    '<div class="cta"><a class="btn primary" href="#subir">Analizar un replay</a><a class="btn" href="#partidos">Ver replays públicos</a></div></section>'+
-    '<div class="tiles"><a class="tile" href="#subir"><b>Analizar</b><span>Subí un replay y compartí el link</span></a>'+
-    '<a class="tile" href="#partidos"><b>Replays</b><span>'+n+' partido'+(n===1?"":"s")+' públicos</span></a>'+
-    '<a class="tile" href="#tabla"><b>Tabla</b><span>Posiciones de la liga</span></a>'+
-    '<a class="tile" href="#goleadores"><b>Goleadores</b><span>Máximos anotadores</span></a></div>'+
-    (n?'<h2>Últimos replays</h2><div class="mlist">'+S.matches.slice(0,6).map(mcard).join("")+'</div>':"");
+  return '<section class="landing hero-ar"><span class="pill2">LTF · Temporada 1</span><h1 class="big">Mirá cada partido <span>como si estuvieras en la cancha</span></h1>'+
+    '<p class="sub">Subí el .hbr2 de tu partido y la sala lo procesa: goles, figura, mapas de calor y la repetición completa, con un link para compartir.</p>'+
+    '<div class="cta"><a class="btn primary" href="#subir">Subir mi partido</a><a class="btn ghost" href="#partidos">Ver partidos</a></div></section>'+
+    '<div class="tiles"><a class="tile" href="#subir"><b>Subir partido</b><span>Del .hbr2 al link en un paso</span></a>'+
+    '<a class="tile" href="#partidos"><b>Partidos</b><span>'+n+' jugado'+(n===1?"":"s")+' en la liga</span></a>'+
+    '<a class="tile" href="#tabla"><b>Tabla</b><span>Quién va arriba</span></a>'+
+    '<a class="tile" href="#goleadores"><b>Goleadores</b><span>Los que más la mueven</span></a></div>'+
+    (n?'<h2>Últimos partidos</h2><div class="mlist">'+S.matches.slice(0,6).map(mcard).join("")+'</div>':"");
 }
 function vTabla(){
   var rows=standings();
@@ -676,7 +678,7 @@ function momentumHTML(M){
   var up="M"+X(0)+","+mid,dn="M"+X(0)+","+mid,i;
   for(i=0;i<n;i++){up+=" L"+X(i).toFixed(1)+","+(mid-Math.max(A.mom[i],0)*amp).toFixed(1);dn+=" L"+X(i).toFixed(1)+","+(mid+Math.max(-A.mom[i],0)*amp).toFixed(1)}
   up+=" L"+X(n-1)+","+mid+" Z";dn+=" L"+X(n-1)+","+mid+" Z";
-  var s='<svg class="mom" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Momentum del partido">';
+  var s='<svg class="mom" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Dominio del partido">';
   s+='<path d="'+up+'" fill="'+esc(a.color)+'" fill-opacity=".55" stroke="'+esc(a.color)+'" stroke-width="1.5"/>';
   s+='<path d="'+dn+'" fill="'+esc(b.color)+'" fill-opacity=".55" stroke="'+esc(b.color)+'" stroke-width="1.5"/>';
   s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+mid+'" y2="'+mid+'" stroke="'+css("--line")+'" stroke-width="1"/>';
@@ -695,15 +697,15 @@ function momentumHTML(M){
 function heroHTML(M){
   var a=sideTeam(M,1),b=sideTeam(M,2),A=M.A,mv=A&&A.mvp;
   return '<article class="hero" style="--c1:'+esc(a.color)+';--c2:'+esc(b.color)+'"><header>'+
-    (mv?'<div class="mvp">★ Jugador del partido <b>'+esc(mv.n)+'</b>'+pill(mv.r)+'</div>':"")+
+    (mv?'<div class="mvp">★ Figura <b>'+esc(mv.n)+'</b>'+pill(mv.r)+'</div>':"")+
     '<div class="t mt">'+esc(M.title||(a.name+" vs "+b.name))+'</div></header>'+
     '<div class="scoreline"><div class="side">'+bigLogo(a)+'<div class="nm">'+esc(a.name)+'</div></div>'+
     '<div class="mid"><div class="score"><span>'+M.s1+'</span><i>:</i><span>'+M.s2+'</span></div>'+
-    '<span class="final">Final del partido</span>'+(A?'<span class="played">'+fmt(A.dur)+' jugados en 2 tiempos</span>':"")+'</div>'+
+    '<span class="final">Finalizado</span>'+(A?'<span class="played">'+fmt(A.dur)+' jugados en 2 tiempos</span>':"")+'</div>'+
     '<div class="side">'+bigLogo(b)+'<div class="nm">'+esc(b.name)+'</div></div></div>'+
     '<div class="scorers"><ul>'+scorerList(M,1)+'</ul><ul class="r">'+scorerList(M,2)+'</ul></div>'+
-    (A&&A.mom?'<div class="chartbox"><h3>Momentum del partido</h3>'+momentumHTML(M)+'</div>':"")+
-    '<div class="foot"><span>Final del partido'+(A?" · "+fmt(A.dur)+" jugados · "+A.players.length+" jugadores":"")+'</span><span>'+esc(LEAGUE)+'</span></div></article>';
+    (A&&A.mom?'<div class="chartbox"><h3>Dominio del partido</h3>'+momentumHTML(M)+'</div>':"")+
+    '<div class="foot"><span>Finalizado'+(A?" · "+fmt(A.dur)+" jugados · "+A.players.length+" jugadores":"")+'</span><span>'+esc(LEAGUE)+'</span></div></article>';
 }
 
 /* --- repetición 2D --- */
@@ -718,12 +720,12 @@ function tabRep(M){
   if(!M.rbuf){
     if(M.rstate==="loading")return empty("Cargando repetición…","Estoy leyendo el replay guardado. Puede tardar unos segundos.");
     if(M.rstate==="err")return empty("No se pudo cargar la repetición","Probá de nuevo más tarde.");
-    if(M.has_replay===false||(M.saved&&!M.has_replay))return empty("Este partido no tiene el replay guardado","El archivo era demasiado grande, pero el resto del análisis sí está.");
+    if(M.has_replay===false||(M.saved&&!M.has_replay))return '<div class="panel empty"><strong>Este partido se guardó sin el archivo del replay</strong>Las estadísticas están completas. Si tenés el .hbr2 podés verlo desde acá (queda solo en tu navegador).<p><label class="btn" for="rf">Cargar el .hbr2</label><input id="rf" type="file" accept=".hbr2" hidden></p></div>';
     return empty("Cargando repetición…","Un momento.");
   }
   var b=A.b;
-  return '<div class="panel"><h2>Repetición</h2><canvas id="vc" class="field" width="960" height="'+Math.round(960*b[1]/b[0])+'"></canvas>'+
-    '<div class="vctl"><button type="button" id="vp">Reproducir</button><button type="button" id="vz" title="Volver al inicio">⏮</button>'+
+  return '<div class="panel"><h2>Repetición</h2><div class="stage"><canvas id="vc"></canvas></div>'+
+    '<div class="vctl"><button type="button" id="vp">Reproducir</button><button type="button" id="vz" title="Volver al inicio">⏮</button><button type="button" id="vf" title="Pantalla completa">⛶</button>'+
     '<div class="grow"><label for="vr" class="sr">Línea de tiempo</label><input id="vr" type="range" min="0" max="'+(RP.maxF||1)+'" value="0"></div>'+
     '<select id="vs" aria-label="Velocidad"><option value="0.5">0.5x</option><option value="1">1x</option><option value="2">2x</option><option value="4">4x</option></select></div>'+
     '<p class="note" id="vt">Cargando el motor de HaxBall…</p></div>';
@@ -749,48 +751,56 @@ function drawMap(g,m,X,Y,s,linesOnly){
   m.discs.forEach(function(d){g.beginPath();g.arc(X(d.x),Y(d.y),Math.max(2,d.r*s),0,6.2832);g.fillStyle=d.col;g.fill()});
 }
 function lerp(a,b,k){return a+(b-a)*k}
-var RP={r:null,buf:null,raf:0,playing:false,ended:false,speed:1,maxF:1,seek:null,mk:false};
-function killPlayer(){cancelAnimationFrame(RP.raf);RP.raf=0;try{if(RP.r)RP.r.destroy()}catch(e){}RP.r=null;RP.buf=null;RP.playing=false;RP.ended=false;RP.seek=null;RP.mk=false;RP.maxF=1}
+var RP={r:null,buf:null,raf:0,playing:false,ended:false,speed:1,maxF:1,seek:null,mk:false,Ctor:null,rend:null,err:""};
+function killPlayer(){cancelAnimationFrame(RP.raf);RP.raf=0;try{if(RP.r)RP.r.destroy()}catch(e){}RP.r=null;RP.rend=null;RP.buf=null;RP.playing=false;RP.ended=false;RP.seek=null;RP.mk=false;RP.maxF=1;RP.err=""}
+/* Renderer oficial de node-haxball (port del dibujo original de HaxBall) */
+function loadRenderer(){
+  if(RP.Ctor)return Promise.resolve(RP.Ctor);
+  var urls=["https://cdn.jsdelivr.net/npm/node-haxball@2.3.0/examples/renderers/defaultRenderer.js","https://cdn.jsdelivr.net/npm/node-haxball@2.2.0/examples/renderers/defaultRenderer.js"];
+  var go=function(i){return fetch(urls[i]).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text()}).then(function(t){
+    var m={exports:{}};new Function("module","exports",t)(m,m.exports);RP.Ctor=m.exports;return RP.Ctor
+  }).catch(function(e){if(i+1<urls.length)return go(i+1);throw e})};
+  return go(0);
+}
+function tex(base){
+  var c=document.createElement("canvas");c.width=c.height=128;var g=c.getContext("2d");g.fillStyle=base;g.fillRect(0,0,128,128);
+  for(var i=0;i<700;i++){g.fillStyle=i%2?"rgba(255,255,255,.035)":"rgba(0,0,0,.035)";g.fillRect(Math.random()*128,Math.random()*128,2,2)}
+  return c;
+}
+function mkRend(){
+  var c=$("vc"),r=RP.r;if(!c||!r||!RP.Ctor||!API)return;
+  try{
+    var rd=new RP.Ctor(API,{canvas:c,images:{grass:tex("#718c5a"),concrete:tex("#5b6b86"),concrete2:tex("#3d4659")},paintGame:true});
+    Object.defineProperty(rd,"room",{writable:true,configurable:true,value:{
+      extrapolate:function(ms,f){try{return r.extrapolate?r.extrapolate(ms,f):r.state}catch(e){return r.state}},
+      get currentPlayerId(){return r.currentPlayerId},librariesMap:null}});
+    rd.initialize();rd.__c=c;RP.rend=rd;RP.err="";
+  }catch(e){RP.rend=null;RP.err="no se pudo crear el visor ("+((e&&e.message)||e)+")"}
+}
+function fwd(n){return function(){var d=RP.rend;if(d&&d[n]){try{d[n].apply(d,arguments)}catch(e){}}}}
 function mkReader(buf){return getAPI().then(function(A){
-  var r=A.Replay.read(new Uint8Array(buf),{});r.setSpeed(0);
+  var r=A.Replay.read(new Uint8Array(buf),{onTeamGoal:fwd("onTeamGoal"),onGameStart:fwd("onGameStart"),onGameEnd:fwd("onGameEnd"),onTimeIsUp:fwd("onTimeIsUp"),onPlayerChatIndicatorChange:fwd("onPlayerChatIndicatorChange")});
+  r.setSpeed(0);
   r.onEnd=function(){RP.playing=false;RP.ended=true;var p=$("vp");if(p)p.textContent="Reproducir"};return r})}
 function kick(){if(!RP.raf)RP.raf=requestAnimationFrame(tick)}
 function restart(f,play){
-  var buf=RP.buf;cancelAnimationFrame(RP.raf);RP.raf=0;try{if(RP.r)RP.r.destroy()}catch(e){}RP.r=null;RP.mk=true;RP.ended=false;RP.seek=null;
-  mkReader(buf).then(function(r){
+  var buf=RP.buf;cancelAnimationFrame(RP.raf);RP.raf=0;try{if(RP.r)RP.r.destroy()}catch(e){}RP.r=null;RP.rend=null;RP.mk=true;RP.ended=false;RP.seek=null;
+  Promise.all([mkReader(buf),loadRenderer().catch(function(e){RP.err="no se pudo cargar el visor ("+((e&&e.message)||e)+")";return null})]).then(function(x){
+    var r=x[0];
     if(RP.buf!==buf){try{r.destroy()}catch(e){}return}
     RP.mk=false;RP.r=r;RP.maxF=r.maxFrameNo||RP.maxF;RP.playing=!!play;
+    mkRend();
     if(f>0){RP.seek=f;r.setSpeed(60);r.setCurrentFrameNo(f)}else r.setSpeed(play?RP.speed:0);
     var sl=$("vr");if(sl)sl.max=RP.maxF;var p=$("vp");if(p)p.textContent=RP.playing?"Pausar":"Reproducir";kick();
-  }).catch(function(){RP.mk=false;var t=$("vt");if(t)t.textContent="No se pudo iniciar la repetición."});
-}
-function drawFrame(){
-  var c=$("vc"),r=RP.r;if(!c||!r||!CM||!CM.A)return;
-  var st=r.state,gs=st&&st.gameState,ph=gs&&gs.physicsState,A=CM.A,g=c.getContext("2d"),W=c.width,H=c.height,b=A.b,s=W/(2*b[0]),m=A.map;
-  var X=function(x){return (x+b[0])*s},Y=function(y){return (y+b[1])*s};
-  g.clearRect(0,0,W,H);g.fillStyle="#3b4148";g.fillRect(0,0,W,H);
-  if(m)drawMap(g,m,X,Y,s,false);
-  if(!ph||!ph.discs){g.fillStyle="#cfd6df";g.font="600 22px Inter,sans-serif";g.textAlign="center";g.fillText("Tocá Reproducir para ver el partido",W/2,H/2);return}
-  var pr=Math.max(6,(m?m.pr:15)*s),br=Math.max(4,(m?m.br:10)*s),c1=sideTeam(CM,1).color,c2=sideTeam(CM,2).color;
-  g.font="600 "+Math.max(11,Math.round(W/70))+"px Inter,sans-serif";g.textAlign="center";g.lineJoin="round";
-  playersOf(st).forEach(function(p){
-    var tm=teamOf(p);if(tm!==1&&tm!==2)return;
-    var dd=typeof p.disc==="number"?ph.discs[p.disc]:p.disc,q=pos(dd);if(!q)return;
-    var px=X(q[0]),py=Y(q[1]);
-    g.beginPath();g.arc(px,py,pr,0,6.2832);g.fillStyle=tm===1?c1:c2;g.fill();g.lineWidth=2;g.strokeStyle="#fff";g.stroke();
-    var nm=String(p.name||"");if(nm.length>14)nm=nm.slice(0,13)+"…";
-    g.lineWidth=3;g.strokeStyle="rgba(0,0,0,.7)";g.strokeText(nm,px,py-pr-4);g.fillStyle="#fff";g.fillText(nm,px,py-pr-4);
-  });
-  var bp=pos(ph.discs[0]);
-  if(bp){g.beginPath();g.arc(X(bp[0]),Y(bp[1]),br,0,6.2832);g.fillStyle="#fff";g.fill();g.lineWidth=2;g.strokeStyle="#14201b";g.stroke()}
+  }).catch(function(e){RP.mk=false;var t=$("vt");if(t)t.textContent="No se pudo iniciar la repetición ("+((e&&e.message)||e)+")."});
 }
 function tick(){
   RP.raf=0;var r=RP.r;if(!r||!$("vc"))return;
   var f=r.getCurrentFrameNo();
   if(RP.seek!=null&&f>=RP.seek-1){RP.seek=null;r.setSpeed(RP.playing?RP.speed:0)}
-  drawFrame();
+  if(RP.rend){try{RP.rend.render()}catch(e){RP.err="error al dibujar ("+((e&&e.message)||e)+")"}}
   var sl=$("vr");if(sl&&document.activeElement!==sl)sl.value=f;
-  var t=$("vt");if(t)t.textContent=fmt(r.getTime()/1000)+" de "+fmt((r.maxFrameNo||0)/60);
+  var t=$("vt");if(t)t.textContent=fmt(r.getTime()/1000)+" de "+fmt((r.maxFrameNo||0)/60)+(RP.err?" · "+RP.err:"");
   RP.raf=requestAnimationFrame(tick);
 }
 function wireViewer(){
@@ -803,12 +813,14 @@ function wireViewer(){
     RP.playing=!RP.playing;if(RP.seek==null)RP.r.setSpeed(RP.playing?RP.speed:0);this.textContent=RP.playing?"Pausar":"Reproducir";
   };
   $("vz").onclick=function(){if(!RP.mk)restart(0,false)};
+  $("vf").onclick=function(){var e=$("vc").parentElement;(e.requestFullscreen||e.webkitRequestFullscreen||function(){}).call(e)};
   $("vr").onchange=function(){
     var f=+this.value,r=RP.r;if(!r||RP.mk)return;
     if(f<r.getCurrentFrameNo())restart(f,RP.playing);else{RP.seek=f;r.setSpeed(60);r.setCurrentFrameNo(f)}
   };
   $("vs").onchange=function(){RP.speed=+this.value;if(RP.r&&RP.playing&&RP.seek==null)RP.r.setSpeed(RP.speed)};
-  if(!RP.r&&!RP.mk)restart(0,false);else kick();
+  if(!RP.r&&!RP.mk)restart(0,true);
+  else{if(RP.r&&(!RP.rend||RP.rend.__c!==c))mkRend();kick()}
 }
 
 /* --- pestañas de detalle --- */
@@ -1045,20 +1057,20 @@ function vPartido(){
    Subir un replay
    ===================================================================== */
 function vSubir(){
-  if(!S.canWrite)return codeBox("Para analizar replays ingresá el código de capitán que te pasó el admin de la liga.");
+  if(!S.canWrite)return codeBox("Para subir partidos ingresá el código de capitán que te pasó el admin de la liga.");
   var up=S.up;CM=null;
   var st='<p class="status'+(up.bad?" bad":"")+'" id="status" role="status">'+esc(up.status||"")+'</p>';
-  var head='<section class="steps"><span class="pill2">Gratis</span><h1 class="big">Analizador de replays</h1><p class="sub">Subí tu archivo .hbr2 y obtené estadísticas, mapas de calor y la repetición original. Al terminar te llevo a la página del replay para compartir.</p></section>';
-  if(!up.buf)return head+'<div class="panel"><label class="drop" id="drop" for="file"><strong>Soltá tu archivo .hbr2 acá</strong><span class="sub">o hacé clic para buscarlo</span><input id="file" type="file" accept=".hbr2" hidden></label>'+st+'</div>';
+  var head='<section class="steps"><span class="pill2">Subir partido</span><h1 class="big">Cargá tu <span>replay</span></h1><p class="sub">Elegí el .hbr2, ponele nombre y listo: cuando termina de procesarse te llevo a la página del partido para que compartas el link.</p></section>';
+  if(!up.buf)return head+'<div class="panel"><label class="drop" id="drop" for="file"><strong>Arrastrá el .hbr2 de tu partido</strong><span class="sub">o tocá para elegirlo</span><input id="file" type="file" accept=".hbr2" hidden></label>'+st+'</div>';
   var opts=function(sel){return '<option value="">Sin equipo de la liga</option>'+S.teams.map(function(t){return '<option value="'+esc(t.id)+'"'+(t.id===sel?" selected":"")+'>'+esc(t.name)+'</option>'}).join("")};
   var ok=!up.busy&&((!up.t1&&!up.t2)||(up.t1&&up.t2&&up.t1!==up.t2));
   return head+'<div class="panel formcard"><div class="chip"><span>📄 '+esc(up.file||"replay.hbr2")+'</span><button type="button" data-act="resetfile"'+(up.busy?" disabled":"")+'>Cambiar</button></div>'+
-    '<div><label for="ut">Título del replay</label><input id="ut" type="text" data-u="title" value="'+esc(up.title)+'"></div>'+
+    '<div><label for="ut">Nombre del partido</label><input id="ut" type="text" data-u="title" value="'+esc(up.title)+'"></div>'+
     '<div><label for="ur">Fecha número (opcional)</label><input id="ur" type="number" min="1" max="99" data-u="round" value="'+esc(up.round)+'"></div>'+
     '<div class="grid2"><div><label for="u1">Equipo rojo</label><select id="u1" data-u="t1">'+opts(up.t1)+'</select></div><div><label for="u2">Equipo azul</label><select id="u2" data-u="t2">'+opts(up.t2)+'</select></div></div>'+
     '<p class="note" style="margin:0">Si elegís los dos equipos, el partido usa sus colores y escudos y suma en la tabla. Si no, queda como replay suelto.</p>'+
     (up.busy?'<div class="prog"><i></i></div>':"")+
-    '<button type="button" class="primary" data-act="analyze"'+(ok?"":" disabled")+'>'+(up.busy?"Analizando…":"Analizar replay")+'</button>'+st+'</div>';
+    '<button type="button" class="primary" data-act="analyze"'+(ok?"":" disabled")+'>'+(up.busy?"Procesando…":"Procesar y publicar")+'</button>'+st+'</div>';
 }
 function pickFile(file){
   if(!file)return;
@@ -1216,6 +1228,7 @@ $("view").addEventListener("input",function(e){
 });
 $("view").addEventListener("change",function(e){
   var t=e.target,u=t.dataset.u;
+  if(t.id==="rf"&&t.files[0]){var rr=new FileReader();rr.onload=function(){if(S.cur){S.cur.rbuf=rr.result;S.cur.rstate="ok";render()}};rr.readAsArrayBuffer(t.files[0]);return}
   if(t.id==="file"){pickFile(t.files[0]);return}
   if(t.id==="el"&&t.files[0]){shrink(t.files[0],function(url){S.E.logo=url;render()});return}
   if(t.id==="hsel"){drawHeat();return}
