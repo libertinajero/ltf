@@ -129,6 +129,7 @@ td.pts{font-family:var(--display);font-weight:700;font-size:20px}
 .scoreline{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:14px 12px 4px}
 .side{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;text-align:center}
 .logo{width:88px;height:88px;border-radius:50%;object-fit:contain;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:32px;color:#fff;overflow:hidden}
+.logo.crest{width:108px;height:108px;border-radius:0;overflow:visible;filter:drop-shadow(0 4px 10px rgba(0,0,0,.45))}
 .side .nm{font-family:var(--display);font-weight:700;font-size:24px;text-transform:uppercase;letter-spacing:.03em;line-height:1.05;overflow-wrap:anywhere}
 .score{font-family:var(--display);font-weight:700;font-size:68px;line-height:1;font-variant-numeric:tabular-nums;display:flex;gap:10px;align-items:center}
 .score i{font-style:normal;color:var(--muted);font-weight:600}
@@ -186,7 +187,7 @@ input[type=color]{width:46px;height:38px;padding:2px;border:1px solid var(--line
 .trow .nm{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}
 @media (max-width:640px){
   .grid2,.grid3,.cols2{grid-template-columns:1fr}
-  .logo{width:64px;height:64px;font-size:24px}.score{font-size:50px}.side .nm{font-size:18px}.hide-s{display:none}
+  .logo{width:64px;height:64px;font-size:24px}.logo.crest{width:80px;height:80px}.score{font-size:50px}.side .nm{font-size:18px}.hide-s{display:none}
   .scorers{padding:4px 12px 12px;font-size:13px}.hero .t{font-size:19px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -795,7 +796,7 @@ function scorerList(M,tm){
 }
 function momentumHTML(M){
   var A=M.A;if(!A||!A.mom||A.mom.length<2)return "";
-  var W=760,H=164,L=14,R=14,mid=58,amp=50,n=A.mom.length,iw=W-L-R,dur=Math.max(A.dur,1);
+  var W=760,H=130,L=14,R=14,mid=58,amp=50,n=A.mom.length,iw=W-L-R,dur=Math.max(A.dur,1);
   var a=sideTeam(M,1),b=sideTeam(M,2),X=function(i){return L+i/(n-1)*iw};
   var up="M"+X(0)+","+mid,dn="M"+X(0)+","+mid,i;
   for(i=0;i<n;i++){up+=" L"+X(i).toFixed(1)+","+(mid-Math.max(A.mom[i],0)*amp).toFixed(1);dn+=" L"+X(i).toFixed(1)+","+(mid+Math.max(-A.mom[i],0)*amp).toFixed(1)}
@@ -810,30 +811,34 @@ function momentumHTML(M){
   for(var hf=0;hf<2;hf++){
     for(tt=120;tt<half-30;tt+=120){x=L+(hf*half+tt)/dur*iw;s+='<text x="'+x.toFixed(1)+'" y="'+(H-3)+'" font-size="11" text-anchor="middle" fill="'+mc+'">'+Math.round(tt/60)+"'</text>"}
   }
-  var best={};
-  [1,2].forEach(function(tm){
-    var bp=null;A.players.forEach(function(p){
-      if(p.tm!==tm)return;
-      if(!bp||(p.r==null?-1:p.r)>(bp.r==null?-1:bp.r)||((p.r==null?-1:p.r)===(bp.r==null?-1:bp.r)&&p.goals+p.ast>bp.goals+bp.ast))bp=p;
-    });best[tm]=bp;
+  A.goals.forEach(function(g){
+    var x=L+clamp(g.t/dur,0,1)*iw,col=g.tm===1?a.color:b.color;
+    s+='<circle cx="'+x.toFixed(1)+'" cy="'+(H-26)+'" r="6" fill="'+(g.og?"none":"#ffffff")+'" stroke="'+esc(col)+'" stroke-width="3"/>';
   });
-  var cy=H-36,SR=17,BR=10.5;
-  A.goals.forEach(function(g,gi){
-    var x=+(L+clamp(g.t/dur,0,1)*iw).toFixed(1),T=g.tm===1?a:b,col=T.color,bp=best[g.tm],id="mk"+gi;
-    var kit=(A.kit&&A.kit[g.tm])||{a:0,t:"#ffffff",c:[col]};
-    var av=bp&&bp.av?bp.av:(bp&&bp.n?String(bp.n).charAt(0).toUpperCase():"");
-    /* sombra y escudo detrás */
-    s+='<circle cx="'+x+'" cy="'+cy+'" r="'+(SR+1)+'" fill="rgba(0,0,0,.35)"/>';
-    if(T.logo)s+='<image href="'+esc(T.logo)+'" x="'+(x-SR)+'" y="'+(cy-SR)+'" width="'+SR*2+'" height="'+SR*2+'" preserveAspectRatio="xMidYMid meet"/>';
-    else s+='<circle cx="'+x+'" cy="'+cy+'" r="'+SR+'" fill="'+esc(col)+'" opacity=".85"/><text x="'+x+'" y="'+(cy-SR+8)+'" font-size="8" font-weight="700" text-anchor="middle" fill="#fff" opacity=".8">'+esc(initials(T.name))+'</text>';
-    /* pelotita con camiseta y avatar del mejor jugador */
-    var n=kit.c.length,sw=BR*2/n,k;
-    s+='<clipPath id="'+id+'"><circle cx="'+x+'" cy="'+cy+'" r="'+BR+'"/></clipPath><g clip-path="url(#'+id+')"><g transform="rotate('+kit.a+' '+x+' '+cy+')">';
-    for(k=0;k<n;k++)s+='<rect x="'+(x-BR+k*sw-0.3).toFixed(2)+'" y="'+(cy-BR*2)+'" width="'+(sw+0.6).toFixed(2)+'" height="'+BR*4+'" fill="'+esc(kit.c[k])+'"/>';
-    s+='</g></g><circle cx="'+x+'" cy="'+cy+'" r="'+BR+'" fill="none" stroke="#fff" stroke-width="2"'+(g.og?' stroke-dasharray="3 2"':'')+'/>';
-    if(av)s+='<text x="'+x+'" y="'+(cy+0.5)+'" font-size="'+(av.length>2?8:10)+'" font-weight="800" text-anchor="middle" dominant-baseline="central" fill="'+esc(kit.t)+'" stroke="rgba(0,0,0,.45)" stroke-width="2.2" paint-order="stroke" stroke-linejoin="round">'+esc(av)+'</text>';
-    if(g.og)s+='<text x="'+x+'" y="'+(cy+SR+9)+'" font-size="8" font-weight="700" text-anchor="middle" fill="#ff8a7a">AG</text>';
+  return s+'</svg>';
+}
+function bestOf(M,tm){
+  var A=M.A,b=null;if(!A||!A.players)return null;
+  A.players.forEach(function(p){
+    if(p.tm!==tm)return;var r=p.r==null?-1:p.r,br=b?(b.r==null?-1:b.r):-2;
+    if(!b||r>br||(r===br&&p.goals+p.ast>b.goals+b.ast))b=p;
   });
+  return b;
+}
+/* Pelotita del equipo: escudo grande atrás + pelota con la camiseta y el avatar del mejor jugador */
+function crestBall(M,side){
+  var t=sideTeam(M,side),A=M.A,bp=bestOf(M,side);
+  if(!A)return bigLogo(t);
+  var kit=(A.kit&&A.kit[side])||{a:0,t:"#ffffff",c:[t.color]},n=kit.c.length,k,id="cb"+side;
+  var av=bp&&bp.av?bp.av:initials(t.name),R=31,cx=50,cy=50,sw=R*2/n;
+  var s='<svg class="logo crest" viewBox="0 0 100 100" role="img" aria-label="'+esc(t.name)+'">';
+  if(t.logo)s+='<image href="'+esc(t.logo)+'" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>';
+  else s+='<circle cx="50" cy="50" r="49" fill="'+esc(t.color)+'" opacity=".55"/><circle cx="50" cy="50" r="48" fill="none" stroke="'+esc(t.color)+'" stroke-width="2"/>';
+  s+='<circle cx="'+cx+'" cy="'+(cy+2)+'" r="'+(R+2)+'" fill="rgba(0,0,0,.4)"/>';
+  s+='<clipPath id="'+id+'"><circle cx="'+cx+'" cy="'+cy+'" r="'+R+'"/></clipPath><g clip-path="url(#'+id+')"><g transform="rotate('+kit.a+' '+cx+' '+cy+')">';
+  for(k=0;k<n;k++)s+='<rect x="'+(cx-R+k*sw-0.4).toFixed(2)+'" y="'+(cy-R*2)+'" width="'+(sw+0.8).toFixed(2)+'" height="'+R*4+'" fill="'+esc(kit.c[k])+'"/>';
+  s+='</g></g><circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="#fff" stroke-width="3"/>';
+  s+='<text x="'+cx+'" y="'+(cy+1)+'" font-size="'+(String(av).length>2?20:30)+'" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="'+esc(kit.t)+'" stroke="rgba(0,0,0,.5)" stroke-width="3" paint-order="stroke" stroke-linejoin="round" style="font-family:var(--display)">'+esc(av)+'</text>';
   return s+'</svg>';
 }
 function heroHTML(M){
@@ -841,10 +846,10 @@ function heroHTML(M){
   return '<article class="hero" style="--c1:'+esc(a.color)+';--c2:'+esc(b.color)+'"><header>'+
     (mv?'<div class="mvp">★ Figura <b>'+esc(mv.n)+'</b>'+pill(mv.r)+'</div>':"")+
     '<div class="t mt">'+esc(M.title||(a.name+" vs "+b.name))+'</div></header>'+
-    '<div class="scoreline"><div class="side">'+bigLogo(a)+'<div class="nm">'+esc(a.name)+'</div></div>'+
+    '<div class="scoreline"><div class="side">'+crestBall(M,1)+'<div class="nm">'+esc(a.name)+'</div></div>'+
     '<div class="mid"><div class="score"><span>'+M.s1+'</span><i>:</i><span>'+M.s2+'</span></div>'+
     '<span class="final">Finalizado</span>'+(A?'<span class="played">'+fmt(A.dur)+' jugados en 2 tiempos</span>':"")+'</div>'+
-    '<div class="side">'+bigLogo(b)+'<div class="nm">'+esc(b.name)+'</div></div></div>'+
+    '<div class="side">'+crestBall(M,2)+'<div class="nm">'+esc(b.name)+'</div></div></div>'+
     '<div class="scorers"><ul>'+scorerList(M,1)+'</ul><ul class="r">'+scorerList(M,2)+'</ul></div>'+
     (A&&A.mom?'<div class="chartbox"><h3>Dominio del partido</h3>'+momentumHTML(M)+'</div>':"")+
     '<div class="foot"><span>Finalizado'+(A?" · "+fmt(A.dur)+" jugados · "+A.players.length+" jugadores":"")+'</span><span>'+esc(LEAGUE)+'</span></div></article>';
