@@ -541,10 +541,13 @@ function analyze(buf){
   return getAPI().then(function(A){return new Promise(function(ok,no){
     /* Cada acumulador tiene su propio reloj, que solo corre desde el saque hasta cada gol (como el cronómetro de HaxBall).
        ALL es el partido completo; cada vez que el juego arranca de nuevo se abre un "partido" aparte. */
-    function newAcc(){return {clk:0,frames:[],P:{},kicks:[],goals:[],poss:[0,0,0],votes:0,lastKick:null,f0:0}}
+    function newAcc(){return {clk:0,frames:[],P:{},kicks:[],goals:[],poss:[0,0,0],votes:0,lastKick:null,f0:0,iv:[]}}
     var ALL=newAcc(),segs=[],cur=null,running=false,seenK=false,map=null,mapTried=false,chat=[],reader,timer,J={},adm={},MS={};
     function fno(){try{var f=reader.getCurrentFrameNo();return typeof f==="number"?f:null}catch(e){return null}}
     function each(fn){fn(ALL);if(cur)fn(cur)}
+    /* intervalos de frames en que el reloj del partido corre (del saque hasta el gol); sirven para mostrar bien el reloj y el marcador al adelantar */
+    function openIv(){var l=ALL.iv[ALL.iv.length-1];if(!l||l[1]!=null){var fn=fno();if(fn!=null)ALL.iv.push([fn,null])}}
+    function closeIv(f){var l=ALL.iv[ALL.iv.length-1];if(l&&l[1]==null&&f!=null)l[1]=f}
     function openSeg(){cur=newAcc();cur.f0=fno()||0;segs.push(cur)}
     function pl(a,id,name){var o=a.P[id];if(!o)o=a.P[id]={id:id,n:name||"?",s1:0,s2:0,touches:0,pp:0,pl:0,goals:0,ast:0,og:0,pts:[],fl:""};if(name)o.n=name;return o}
     function ballNow(){
@@ -574,7 +577,7 @@ function analyze(buf){
     function finish(partial){
       clearTimeout(timer);try{reader.destroy()}catch(e){}
       try{
-        var an=buildAnalysis(mkR(ALL,false)),good=segs.filter(function(g){return g.clk>=300});
+        closeIv(fno());var an=buildAnalysis(mkR(ALL,false));an.iv=ALL.iv.filter(function(v){return v[1]!=null});var good=segs.filter(function(g){return g.clk>=300});
         if(good.length>=2){
           an.parts=good.map(function(g){
             var pa=buildAnalysis(mkR(g,true));
@@ -592,8 +595,8 @@ function analyze(buf){
     timer=setTimeout(function(){finish(true)},60000);
     try{
       reader=A.Replay.read(new Uint8Array(buf),{
-        onGameStart:function(){running=false;ALL.lastKick=null;openSeg()},
-        onKickOff:function(){seenK=true;running=true;each(function(a){a.lastKick=null})},
+        onGameStart:function(){running=false;closeIv(fno());ALL.lastKick=null;openSeg()},
+        onKickOff:function(){seenK=true;running=true;openIv();each(function(a){a.lastKick=null})},
         onGameTick:function(){
           if(!running)return;
           if(!cur)openSeg();
@@ -603,7 +606,7 @@ function analyze(buf){
         onPlayerBallKick:function(id){
           var p=reader.state.getPlayer(id),tm=teamOf(p);
           if(!p||(tm!==1&&tm!==2))return;
-          if(!seenK){seenK=true;running=true;if(!cur)openSeg()}
+          if(!seenK){seenK=true;running=true;openIv();if(!cur)openSeg()}
           var bp0=ballNow(),fn=fno();
           each(function(a){
             var o=pl(a,id,p.name);o.touches++;var t=a.clk/60,lk=a.lastKick;
@@ -629,7 +632,7 @@ function analyze(buf){
             a.goals.push({t:t,tm:teamId,id:sc?sc.id:null,n:sc&&a.P[sc.id]?a.P[sc.id].n:"Gol",og:og,aid:ast?ast.id:null,an:ast&&a.P[ast.id]?a.P[ast.id].n:null,f:gf});
             a.lastKick=null;
           });
-          running=false;
+          running=false;closeIv(gf);
         },
         onPlayerChat:function(id,message){
           MS[id]=(MS[id]||0)+1;
@@ -918,6 +921,20 @@ function fitZoom(){
   if(d.followMode!==fm)d.followMode=fm;
   if(Math.abs(z-d.zoomCoeff)>0.001)d.zoomCoeff=z;
 }
+/* Marcador y reloj calculados con lo que se analizó, así quedan bien aunque se adelante o se salte en el replay */
+function gameStart(f){var A=S.cur&&S.cur.A,g0=0;if(A&&A.parts&&A.parts.length>1)A.parts.forEach(function(q){if(typeof q.f0==="number"&&q.f0<=f)g0=q.f0});return g0}
+function scoreAt(f){
+  var A=S.cur&&S.cur.A;if(!A||!A.goals||!A.goals.length||A.goals.some(function(g){return typeof g.f!=="number"}))return A&&A.goals&&!A.goals.length?[0,0]:null;
+  var g0=gameStart(f),r=[0,0];
+  A.goals.forEach(function(g){if(g.f>=g0&&g.f<=f)r[g.tm===1?0:1]++});
+  return r;
+}
+function clockAt(f){
+  var A=S.cur&&S.cur.A;if(!A||!A.iv)return null;
+  var g0=gameStart(f),t=0;
+  A.iv.forEach(function(v){var a=Math.max(v[0],g0),b=Math.min(v[1],f);if(b>a)t+=b-a});
+  return t/60;
+}
 function tick(){
   RP.raf=0;var r=RP.r;if(!r||!$("vc"))return;
   var f=r.getCurrentFrameNo();
@@ -926,7 +943,8 @@ function tick(){
   var sl=$("vr");if(sl&&document.activeElement!==sl)sl.value=f;
   var t=$("vt");if(t)t.textContent=fmt(r.getTime()/1000)+" / "+fmt((r.maxFrameNo||0)/60);
   var q=$("ve");if(q)q.textContent=RP.err;
-  q=$("s1");if(q)q.textContent=RP.sc[0];q=$("s2");if(q)q.textContent=RP.sc[1];q=$("sbt");if(q)q.textContent=fmtMs(RP.gt/60);
+  var scr=scoreAt(f),ck=clockAt(f);
+  q=$("s1");if(q)q.textContent=scr?scr[0]:RP.sc[0];q=$("s2");if(q)q.textContent=scr?scr[1]:RP.sc[1];q=$("sbt");if(q)q.textContent=fmtMs(ck!=null?ck:RP.gt/60);
   RP.raf=requestAnimationFrame(tick);
 }
 var SPD=[0.25,0.5,1,2,4,8],ZM=[1,1.6,2.3,3.2,4.5];
