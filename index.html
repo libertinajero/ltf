@@ -217,6 +217,19 @@ a.tile b{font-family:var(--display);font-size:22px;text-transform:uppercase;lett
 #vbox:-webkit-full-screen{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:0;background:var(--bg)}
 #vbox:fullscreen h2,#vbox:-webkit-full-screen h2{display:none}
 #vbox:fullscreen .stage,#vbox:-webkit-full-screen .stage{flex:1;aspect-ratio:auto;min-height:0}
+.sb{position:absolute;top:0;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:rgba(8,16,28,.88);border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px;padding:6px 16px;font-family:var(--display);font-weight:700;font-size:22px;white-space:nowrap;max-width:94%;z-index:2}
+.sb i{width:16px;height:16px;border-radius:3px;display:inline-block;flex:none;border:1px solid rgba(255,255,255,.55)}
+.sb em{font-style:normal;color:var(--muted)}
+.sb .tn{font-size:14px;font-weight:600;color:var(--muted);max-width:110px;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;letter-spacing:.04em}
+.sb time{margin-left:10px;color:var(--ink);font-variant-numeric:tabular-nums}
+.vbar{display:flex;align-items:center;gap:8px;background:#0a121d;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px}
+.vbar button{padding:6px 10px;min-width:36px}
+.spd{display:flex;align-items:center;gap:4px}.spd b{min-width:38px;text-align:center;font-variant-numeric:tabular-nums}
+.vbar .vt{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;min-width:78px;text-align:center}
+.pbar{position:relative;flex:1;min-width:80px;height:26px}
+.pbar input{position:absolute;inset:0;width:100%;height:100%;margin:0;background:none;accent-color:var(--celeste)}
+.marks{position:absolute;left:0;right:0;top:0;height:100%;pointer-events:none}
+.vbar .gm{position:absolute;top:3px;width:6px;height:20px;padding:0;min-width:0;transform:translateX(-50%);border:1px solid #fff;border-radius:2px;pointer-events:auto;cursor:pointer}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 </style>
 </head>
@@ -725,11 +738,15 @@ function tabRep(M){
     return empty("Cargando repetición…","Un momento.");
   }
   var b=A.b;
-  return '<div class="panel" id="vbox"><h2>Repetición</h2><div class="stage"><canvas id="vc"></canvas></div>'+
-    '<div class="vctl"><button type="button" id="vp" aria-label="Reproducir o pausar">▶</button><button type="button" id="vz" title="Volver al inicio">⏮</button><button type="button" id="vf" title="Pantalla completa">⛶</button>'+
-    '<div class="grow"><label for="vr" class="sr">Línea de tiempo</label><input id="vr" type="range" min="0" max="'+(RP.maxF||1)+'" value="0"></div>'+
-    '<select id="vs" aria-label="Velocidad"><option value="0.5">0.5x</option><option value="1">1x</option><option value="2">2x</option><option value="4">4x</option></select></div>'+
-    '<p class="note" id="vt">Cargando el motor de HaxBall…</p></div>';
+  var ta=sideTeam(M,1),tb=sideTeam(M,2);
+  return '<div class="panel" id="vbox"><h2>Ver partido</h2><div class="stage"><canvas id="vc"></canvas>'+
+    '<div class="sb"><span class="tn">'+esc(ta.name)+'</span><i style="background:'+esc(ta.color)+'"></i><b id="s1">0</b><em>-</em><b id="s2">0</b><i style="background:'+esc(tb.color)+'"></i><span class="tn">'+esc(tb.name)+'</span><time id="sbt">0:00</time></div></div>'+
+    '<div class="vbar"><button type="button" id="vz" title="Volver al inicio">⏮</button><button type="button" id="vp" aria-label="Reproducir o pausar">▶</button>'+
+    '<span class="spd"><button type="button" id="vsm" title="Más lento">−</button><b id="vsl">1x</b><button type="button" id="vsp" title="Más rápido">+</button></span>'+
+    '<span id="vt" class="vt">0:00</span>'+
+    '<div class="pbar"><label for="vr" class="sr">Línea de tiempo</label><input id="vr" type="range" min="0" max="'+(RP.maxF||1)+'" value="0"><div id="vm" class="marks"></div></div>'+
+    '<button type="button" id="vf" title="Pantalla completa">⛶</button></div>'+
+    '<p class="note" id="ve">Cargando el motor de HaxBall…</p></div>';
 }
 function drawMap(g,m,X,Y,s,linesOnly){
   if(!linesOnly&&m.type!=="none"&&m.w&&m.h){
@@ -752,8 +769,8 @@ function drawMap(g,m,X,Y,s,linesOnly){
   m.discs.forEach(function(d){g.beginPath();g.arc(X(d.x),Y(d.y),Math.max(2,d.r*s),0,6.2832);g.fillStyle=d.col;g.fill()});
 }
 function lerp(a,b,k){return a+(b-a)*k}
-var RP={r:null,buf:null,raf:0,playing:false,ended:false,speed:1,maxF:1,seek:null,mk:false,Ctor:null,rend:null,err:""};
-function killPlayer(){cancelAnimationFrame(RP.raf);RP.raf=0;try{if(RP.r)RP.r.destroy()}catch(e){}RP.r=null;RP.rend=null;RP.buf=null;RP.playing=false;RP.ended=false;RP.seek=null;RP.mk=false;RP.maxF=1;RP.err=""}
+var RP={r:null,buf:null,raf:0,playing:false,ended:false,speed:1,maxF:1,seek:null,mk:false,Ctor:null,rend:null,err:"",sc:[0,0],gt:0,kd:false};
+function killPlayer(){cancelAnimationFrame(RP.raf);RP.raf=0;try{if(RP.r)RP.r.destroy()}catch(e){}RP.r=null;RP.rend=null;RP.buf=null;RP.playing=false;RP.ended=false;RP.seek=null;RP.mk=false;RP.maxF=1;RP.err="";RP.sc=[0,0];RP.gt=0;RP.kd=false}
 /* Renderer oficial de node-haxball (port del dibujo original de HaxBall) */
 function loadRenderer(){
   if(RP.Ctor)return Promise.resolve(RP.Ctor);
@@ -765,7 +782,7 @@ function loadRenderer(){
 }
 function tex(base){
   var c=document.createElement("canvas");c.width=c.height=128;var g=c.getContext("2d");g.fillStyle=base;g.fillRect(0,0,128,128);
-  for(var i=0;i<700;i++){g.fillStyle=i%2?"rgba(255,255,255,.035)":"rgba(0,0,0,.035)";g.fillRect(Math.random()*128,Math.random()*128,2,2)}
+  for(var i=0;i<260;i++){g.fillStyle=i%2?"rgba(255,255,255,.018)":"rgba(0,0,0,.018)";g.fillRect(Math.random()*128,Math.random()*128,2,2)}
   return c;
 }
 function mkRend(){
@@ -775,39 +792,70 @@ function mkRend(){
     Object.defineProperty(rd,"room",{writable:true,configurable:true,value:{
       extrapolate:function(ms,f){try{return r.extrapolate?r.extrapolate(ms,f):r.state}catch(e){return r.state}},
       get currentPlayerId(){return r.currentPlayerId},librariesMap:null}});
-    rd.initialize();rd.__c=c;RP.rend=rd;RP.err="";
+    rd.followMode=false;rd.initialize();rd.__c=c;RP.rend=rd;RP.err="";
   }catch(e){RP.rend=null;RP.err="no se pudo crear el visor ("+((e&&e.message)||e)+")"}
 }
 function fwd(n){return function(){var d=RP.rend;if(d&&d[n]){try{d[n].apply(d,arguments)}catch(e){}}}}
 function mkReader(buf){return getAPI().then(function(A){
-  var r=A.Replay.read(new Uint8Array(buf),{onTeamGoal:fwd("onTeamGoal"),onGameStart:fwd("onGameStart"),onGameEnd:fwd("onGameEnd"),onTimeIsUp:fwd("onTimeIsUp"),onPlayerChatIndicatorChange:fwd("onPlayerChatIndicatorChange")});
+  var r=A.Replay.read(new Uint8Array(buf),{onTeamGoal:function(t){RP.sc[t===1?0:1]++;fwd("onTeamGoal")(t)},onGameStart:function(){RP.sc=[0,0];RP.gt=0;RP.kd=false;fwd("onGameStart")()},onKickOff:function(){if(!RP.kd){RP.kd=true;RP.gt=0}},onGameTick:function(){RP.gt++},onGameEnd:fwd("onGameEnd"),onTimeIsUp:fwd("onTimeIsUp"),onPlayerChatIndicatorChange:fwd("onPlayerChatIndicatorChange")});
   r.setSpeed(0);
   r.onEnd=function(){RP.playing=false;RP.ended=true;var p=$("vp");if(p)p.textContent="▶"};return r})}
 function kick(){if(!RP.raf)RP.raf=requestAnimationFrame(tick)}
 function restart(f,play){
-  var buf=RP.buf;cancelAnimationFrame(RP.raf);RP.raf=0;try{if(RP.r)RP.r.destroy()}catch(e){}RP.r=null;RP.rend=null;RP.mk=true;RP.ended=false;RP.seek=null;
+  var buf=RP.buf;cancelAnimationFrame(RP.raf);RP.raf=0;try{if(RP.r)RP.r.destroy()}catch(e){}RP.r=null;RP.rend=null;RP.mk=true;RP.ended=false;RP.seek=null;RP.sc=[0,0];RP.gt=0;RP.kd=false;
   Promise.all([mkReader(buf),loadRenderer().catch(function(e){RP.err="no se pudo cargar el visor ("+((e&&e.message)||e)+")";return null})]).then(function(x){
     var r=x[0];
     if(RP.buf!==buf){try{r.destroy()}catch(e){}return}
     RP.mk=false;RP.r=r;RP.maxF=r.maxFrameNo||RP.maxF;RP.playing=!!play;
     mkRend();
     if(f>0){RP.seek=f;r.setSpeed(60);r.setCurrentFrameNo(f)}else r.setSpeed(play?RP.speed:0);
-    var sl=$("vr");if(sl)sl.max=RP.maxF;var p=$("vp");if(p)p.textContent=RP.playing?"❚❚":"▶";kick();
-  }).catch(function(e){RP.mk=false;var t=$("vt");if(t)t.textContent="No se pudo iniciar la repetición ("+((e&&e.message)||e)+")."});
+    var sl=$("vr");if(sl)sl.max=RP.maxF;var p=$("vp");if(p)p.textContent=RP.playing?"❚❚":"▶";drawMarks();kick();
+  }).catch(function(e){RP.mk=false;var t=$("ve");if(t)t.textContent="No se pudo iniciar la repetición ("+((e&&e.message)||e)+")."});
+}
+/* encuadra toda la cancha en el visor, sin importar el tamaño de la pantalla */
+function fitZoom(){
+  var d=RP.rend,r=RP.r;if(!d||!r)return;
+  var gs=r.state&&r.state.gameState,sd=gs&&gs.stadium,c=d.__c;if(!sd||!c)return;
+  var w=(sd.bgWidth||0)+70,h=(sd.bgHeight||0)+70;
+  if(w<=70||h<=70){w=sd.width||0;h=sd.height||0}
+  if(!(w>0&&h>0)||!c.clientWidth||!c.clientHeight)return;
+  var z=Math.min(c.clientWidth/(2*w),c.clientHeight/(2*h));
+  if(Math.abs(z-d.zoomCoeff)>0.001)d.zoomCoeff=z;
 }
 function tick(){
   RP.raf=0;var r=RP.r;if(!r||!$("vc"))return;
   var f=r.getCurrentFrameNo();
   if(RP.seek!=null&&f>=RP.seek-1){RP.seek=null;r.setSpeed(RP.playing?RP.speed:0)}
-  if(RP.rend){try{RP.rend.render()}catch(e){RP.err="error al dibujar ("+((e&&e.message)||e)+")"}}
+  if(RP.rend){try{fitZoom();RP.rend.render()}catch(e){RP.err="error al dibujar ("+((e&&e.message)||e)+")"}}
   var sl=$("vr");if(sl&&document.activeElement!==sl)sl.value=f;
-  var t=$("vt");if(t)t.textContent=fmt(r.getTime()/1000)+" de "+fmt((r.maxFrameNo||0)/60)+(RP.err?" · "+RP.err:"");
+  var t=$("vt");if(t)t.textContent=fmt(r.getTime()/1000)+" / "+fmt((r.maxFrameNo||0)/60);
+  var q=$("ve");if(q)q.textContent=RP.err;
+  q=$("s1");if(q)q.textContent=RP.sc[0];q=$("s2");if(q)q.textContent=RP.sc[1];q=$("sbt");if(q)q.textContent=fmt(RP.gt/60);
   RP.raf=requestAnimationFrame(tick);
+}
+var SPD=[0.25,0.5,1,2,4,8];
+function drawMarks(){
+  var m=$("vm");if(!m||!CM||!CM.A||RP.maxF<2)return;
+  var A=CM.A,kf=RP.maxF-Math.round((A.dur||0)*60),h="";
+  (A.goals||[]).forEach(function(g){
+    var f=Math.max(0,Math.min(RP.maxF,kf+Math.round(g.t*60)));
+    h+='<button type="button" class="gm" data-f="'+f+'" style="left:'+(f/RP.maxF*100).toFixed(2)+'%;background:'+esc(sideTeam(CM,g.tm).color)+'" title="Gol '+fmt(g.t)+'"></button>';
+  });
+  m.innerHTML=h;
+}
+function seekTo(f){
+  var r=RP.r;if(!r||RP.mk)return;f=Math.max(0,Math.min(RP.maxF,f));
+  if(f<r.getCurrentFrameNo())restart(f,RP.playing);else{RP.seek=f;r.setSpeed(60);r.setCurrentFrameNo(f)}
+}
+function setSpd(d){
+  var i=SPD.indexOf(RP.speed);if(i<0)i=2;i=Math.max(0,Math.min(SPD.length-1,i+d));RP.speed=SPD[i];
+  var l=$("vsl");if(l)l.textContent=RP.speed+"x";
+  if(RP.r&&RP.playing&&RP.seek==null)RP.r.setSpeed(RP.speed);
 }
 function wireViewer(){
   var c=$("vc");if(!c||!CM||!CM.rbuf)return;
   if(RP.buf!==CM.rbuf){killPlayer();RP.buf=CM.rbuf}
-  $("vp").textContent=RP.playing?"❚❚":"▶";$("vs").value=String(RP.speed);$("vr").max=RP.maxF;
+  $("vp").textContent=RP.playing?"❚❚":"▶";$("vsl").textContent=RP.speed+"x";$("vr").max=RP.maxF;
   $("vp").onclick=function(){
     if(RP.mk)return;
     if(!RP.r||RP.ended){restart(0,true);return}
@@ -815,11 +863,10 @@ function wireViewer(){
   };
   $("vz").onclick=function(){if(!RP.mk)restart(0,false)};
   $("vf").onclick=function(){var e=$("vbox");(e.requestFullscreen||e.webkitRequestFullscreen||function(){}).call(e)};
-  $("vr").onchange=function(){
-    var f=+this.value,r=RP.r;if(!r||RP.mk)return;
-    if(f<r.getCurrentFrameNo())restart(f,RP.playing);else{RP.seek=f;r.setSpeed(60);r.setCurrentFrameNo(f)}
-  };
-  $("vs").onchange=function(){RP.speed=+this.value;if(RP.r&&RP.playing&&RP.seek==null)RP.r.setSpeed(RP.speed)};
+  $("vr").onchange=function(){seekTo(+this.value)};
+  $("vsm").onclick=function(){setSpd(-1)};$("vsp").onclick=function(){setSpd(1)};
+  $("vm").onclick=function(e){var b=e.target.closest(".gm");if(b)seekTo((+b.dataset.f)-300)};
+  drawMarks();
   if(!RP.r&&!RP.mk)restart(0,true);
   else{if(RP.r&&(!RP.rend||RP.rend.__c!==c))mkRend();kick()}
 }
