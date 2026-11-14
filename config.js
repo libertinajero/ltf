@@ -1,9 +1,7 @@
 // Configuración de la página de la LTF.
-// Reemplazá las dos líneas de abajo con los datos de TU proyecto de Supabase
-// (Project Settings > API). Dejá las comillas.
-// La clave "anon" / "publishable" está pensada para ser pública: no pasa nada
-// si queda en la página, porque nadie puede escribir sin los códigos.
+// La clave "publishable" está pensada para ser pública: nadie puede escribir
+// ni borrar nada sin los códigos de acceso.
 window.LTF_CONFIG = {
-  url: "PEGAR_AQUI_LA_URL_DEL_PROYECTO",
-  key: "PEGAR_AQUI_LA_CLAVE_ANON_O_PUBLISHABLE"
+  url: "https://usvrjnamhwzyvxalceau.supabase.co",
+  key: "sb_publishable_ftTRZhFyJS82YF28ij8khw_XxHUVkxi"
 };
