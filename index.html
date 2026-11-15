@@ -245,6 +245,13 @@ a.hbtn:hover,a.hbtn:focus-visible{transform:translateY(-5px);border-color:var(--
 .hbtn b{font-family:var(--display);font-size:28px;letter-spacing:.04em;text-transform:uppercase}
 .hbtn small{color:var(--muted);font-size:14px}
 .hbtn em{font-style:normal;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--sun);color:var(--sun);border-radius:999px;padding:2px 10px;margin-top:4px}
+.tlink{color:inherit;text-decoration:none;cursor:pointer}
+.tlink:hover,.tlink:focus-visible{color:inherit;text-decoration:none}
+.teamhead{display:flex;align-items:center;gap:16px}
+.tstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:8px;margin-top:8px}
+.tstats div{background:#0b1220;border:1px solid var(--line);border-radius:8px;padding:8px 4px;text-align:center}
+.tstats b{display:block;font-size:20px;font-family:var(--display)}
+.tstats span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .mchks{display:flex;gap:10px}
 .mchk{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;text-transform:none;letter-spacing:0}
 .mchk input{width:auto;margin:0}
@@ -813,13 +820,47 @@ function addPlayer(tid){
   var name=(S.R[tid]||"").trim();if(!name)return;
   api.rpc("add_player",{code:S.code,p_team:String(tid),p_mode:S.mode,p_name:name}).then(function(){S.R[tid]="";S.rmsg="";return loadAll(true)}).catch(failR);
 }
+function tlink(t){
+  return t&&t.id!==""&&t.id!=null?'<a class="tlink" href="#'+S.mode+'-equipo-'+encodeURIComponent(t.id)+'">'+esc(t.name)+'</a>':esc(t&&t.name||"");
+}
+function vEquipo(){
+  var md=S.mode,t=null;
+  S.teams.forEach(function(x){if(String(x.id)===String(S.teamId))t=x});
+  if(!t)return empty("No encontré ese equipo","Volvé a la tabla y elegí otro.");
+  var r=null,pos=0;
+  standings(md).forEach(function(x,i){if(String(x.t.id)===String(t.id)){r=x;pos=i+1}});
+  var pl=rosterOf(t.id,md),sc={},mine=[];
+  scorers(md).forEach(function(x){if(String(x.tid)===String(t.id)){sc[x.name.toLowerCase()]=x.n;mine.push(x)}});
+  var h='<div class="panel teamhead">'+bigLogo(t)+'<div><h2 style="margin:0 0 6px">'+esc(t.name)+'</h2><span class="pill2">Liga '+md+'</span></div></div>';
+  if(r){
+    var box=function(l,v){return '<div><b>'+v+'</b><span>'+l+'</span></div>'};
+    h+='<div class="panel"><h2>Estadísticas · '+md+'</h2><div class="tstats">'+box("Posición",pos+"°")+box("Puntos",r.pts)+box("PJ",r.pj)+box("G",r.g)+box("E",r.e)+box("P",r.p)+box("GF",r.gf)+box("GC",r.gc)+box("DG",(r.dg>0?"+":"")+r.dg)+box("%",r.pct)+'</div></div>';
+  }
+  var on=pl.filter(function(p){return p.enabled!==false}).length;
+  h+='<div class="panel"><div class="phead"><h2 style="margin:0">Plantilla</h2><span class="badge">'+on+' habilitados · '+pl.length+' en total</span></div>';
+  if(!pl.length)h+='<p class="note" style="margin:6px 0 0">Todavía no hay jugadores cargados para la liga '+md+'.</p>';
+  pl.forEach(function(p){
+    var ok=p.enabled!==false,g=sc[String(p.name).toLowerCase()]||0;
+    h+='<div class="trow prow"><span class="nm">'+esc(p.name)+'</span>'+(g?'<span class="badge">⚽ '+g+'</span>':'')+'<span class="est '+(ok?"ok":"no")+'">'+(ok?"✓ Habilitado":"✕ No habilitado")+'</span></div>';
+  });
+  if(S.isAdmin)h+='<p class="note"><a class="tlink" href="#'+md+'-plantillas">Editar plantillas</a></p>';
+  h+='</div>';
+  if(mine.length){
+    h+='<div class="panel"><h2>Goleadores del equipo</h2>';
+    mine.forEach(function(x,i){h+='<div class="trow"><span class="pos">'+(i+1)+'</span><span class="nm">'+esc(x.name)+'</span><span class="pts">'+x.n+'</span></div>'});
+    h+='</div>';
+  }
+  var ms=modeMatches(md).filter(function(m){return String(m.t1)===String(t.id)||String(m.t2)===String(t.id)});
+  h+='<h2>Partidos</h2>'+(ms.length?'<div class="mlist">'+ms.map(mcard).join("")+'</div>':empty("Todavía no jugó partidos en "+md,"Cuando se guarde un partido de este equipo, aparece acá."));
+  return h;
+}
 function vPlantillas(){
   var md=S.mode,teams=modeTeams(md).slice().sort(function(a,b){return a.name.localeCompare(b.name)});
   var h='<div class="panel"><h2>Plantillas · '+md+'</h2><p class="note" style="margin:0">Jugadores de cada equipo en la liga '+md+'. Solo pueden jugar los que figuran como habilitados.</p>'+(S.rmsg?'<p class="status bad" role="status">'+esc(S.rmsg)+'</p>':"")+'</div>';
   if(!teams.length)return h+empty("Todavía no hay equipos en "+md,"Cuando el admin cargue los equipos y sus jugadores, aparecen acá.");
   teams.forEach(function(t){
     var pl=rosterOf(t.id,md),on=pl.filter(function(p){return p.enabled!==false}).length;
-    h+='<div class="panel plant"><div class="phead"><span class="cell">'+mini(t)+'<b>'+esc(t.name)+'</b></span><span class="badge">'+on+' habilitados · '+pl.length+' en total</span></div>';
+    h+='<div class="panel plant"><div class="phead"><span class="cell">'+mini(t)+'<b>'+tlink(t)+'</b></span><span class="badge">'+on+' habilitados · '+pl.length+' en total</span></div>';
     if(!pl.length)h+='<p class="note" style="margin:6px 0 0">Todavía no hay jugadores cargados.</p>';
     pl.forEach(function(p){
       var ok=p.enabled!==false;
@@ -845,7 +886,7 @@ function vTabla(){
   if(!rows.length)return empty("Todavía no hay equipos","Cuando el admin cargue los equipos y se guarde el primer partido, acá aparece la tabla de posiciones.");
   var h='<div class="panel"><h2>Tabla de posiciones · '+S.mode+'</h2><div class="scroll"><table><thead><tr><th>#</th><th class="tm">Equipo</th><th>Pts</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th class="hide-s">GF</th><th class="hide-s">GC</th><th>DG</th><th class="hide-s">%</th></tr></thead><tbody>';
   rows.forEach(function(r,i){
-    h+='<tr><td class="pos">'+(i+1)+'</td><td class="tm"><span class="cell">'+mini(r.t)+'<span>'+esc(r.t.name)+'</span></span></td><td class="pts">'+r.pts+'</td><td>'+r.pj+'</td><td>'+r.g+'</td><td>'+r.e+'</td><td>'+r.p+'</td><td class="hide-s">'+r.gf+'</td><td class="hide-s">'+r.gc+'</td><td>'+(r.dg>0?"+":"")+r.dg+'</td><td class="hide-s">'+r.pct+'</td></tr>';
+    h+='<tr><td class="pos">'+(i+1)+'</td><td class="tm"><span class="cell">'+mini(r.t)+'<span>'+tlink(r.t)+'</span></span></td><td class="pts">'+r.pts+'</td><td>'+r.pj+'</td><td>'+r.g+'</td><td>'+r.e+'</td><td>'+r.p+'</td><td class="hide-s">'+r.gf+'</td><td class="hide-s">'+r.gc+'</td><td>'+(r.dg>0?"+":"")+r.dg+'</td><td class="hide-s">'+r.pct+'</td></tr>';
   });
   return h+'</tbody></table></div><p class="note">3 puntos por victoria, 1 por empate. Desempata la diferencia de gol y después los goles a favor. % es el aprovechamiento de puntos.</p></div>';
 }
@@ -865,7 +906,7 @@ function vGoleadores(){
   var r=scorers(S.mode);
   if(!r.length)return empty("Todavía no hay goles","Los goleadores salen de los partidos guardados.");
   var h='<div class="panel"><h2>Goleadores · '+S.mode+'</h2><div class="scroll"><table><thead><tr><th>#</th><th class="tm">Jugador</th><th class="tm">Equipo</th><th>Goles</th></tr></thead><tbody>';
-  r.forEach(function(x,i){var t=teamById(x.tid)||{name:x.tn||"",color:"#6b7a72",logo:""};h+='<tr><td class="pos">'+(i+1)+'</td><td class="tm">'+esc(x.name)+'</td><td class="tm"><span class="cell">'+mini(t)+'<span>'+esc(t.name)+'</span></span></td><td class="pts">'+x.n+'</td></tr>'});
+  r.forEach(function(x,i){var t=teamById(x.tid)||{name:x.tn||"",color:"#6b7a72",logo:""};h+='<tr><td class="pos">'+(i+1)+'</td><td class="tm">'+esc(x.name)+'</td><td class="tm"><span class="cell">'+mini(t)+'<span>'+tlink(t)+'</span></span></td><td class="pts">'+x.n+'</td></tr>'});
   return h+'</tbody></table></div></div>';
 }
 function codeBox(msg){
@@ -1654,6 +1695,7 @@ function loadReplay(M){
 }
 function parseHash(h){
   var m=h.match(/^partido-([0-9a-f-]{36})$/i);if(m)return {tab:"partido",id:m[1]};
+  m=h.match(/^(x5|x7)-equipo-(.+)$/);if(m){var tid="";try{tid=decodeURIComponent(m[2])}catch(e){tid=m[2]}return {tab:"equipo",mode:m[1],teamId:tid}}
   m=h.match(/^(x5|x7)(?:-(subir|partidos|tabla|goleadores|plantillas))?$/);if(m)return {tab:m[2]||"inicio",mode:m[1]};
   if(/^(liga|host3|codigo|equipos)$/.test(h))return {tab:h};
   if(/^(subir|partidos|tabla|goleadores)$/.test(h))return {tab:h,mode:"x5"}; /* links viejos */
@@ -1663,6 +1705,7 @@ function route(){
   var P=parseHash(location.hash.slice(1));
   V.playing=false;killPlayer();S.rmsg="";
   if(P.mode)S.mode=P.mode;
+  if(P.teamId!==undefined)S.teamId=P.teamId;
   if(P.tab==="partido"){
     S.tab="partido";
     if(!S.cur||S.cur.id!==P.id){S.cur=null;if(S.loaded){openMatch(P.id);return}}
@@ -1671,7 +1714,7 @@ function route(){
   }
   render();
 }
-var MODE_TABS=["inicio","subir","partidos","tabla","goleadores","plantillas"];
+var MODE_TABS=["inicio","subir","partidos","tabla","goleadores","plantillas","equipo"];
 function modeCtx(){
   if(S.tab==="partido")return S.cur&&S.cur.mode?mOf(S.cur):S.mode;
   return MODE_TABS.indexOf(S.tab)>=0?S.mode:"";
@@ -1682,10 +1725,11 @@ function backHash(){
   if(t==="partido")return modeCtx()+"-partidos";
   if(t==="liga"||t==="host3"||t==="codigo")return "home";
   if(t==="equipos"||t==="inicio")return "liga";
+  if(t==="equipo")return S.mode+"-tabla";
   return S.mode;
 }
 function navHTML(){
-  var b=backHash(),md=modeCtx(),act=S.tab==="partido"?"partidos":S.tab,h="";
+  var b=backHash(),md=modeCtx(),act=S.tab==="partido"?"partidos":(S.tab==="equipo"?"tabla":S.tab),h="";
   if(b!==null)h+='<button type="button" class="navback" data-h="'+b+'" aria-label="Volver atrás">← Atrás</button>';
   if(md)MTABS.forEach(function(t){h+='<button type="button" data-h="'+(t[0]==="inicio"?md:md+"-"+t[0])+'"'+(act===t[0]?' aria-current="page"':"")+'>'+t[1]+'</button>'});
   return h+'<button type="button" data-act="codebtn" style="margin-left:auto;flex:none">'+(S.role?"Salir":"Ingresar código")+'</button>';
@@ -1696,7 +1740,7 @@ function render(){
   if(S.err&&!S.loaded){v.innerHTML=empty("No se pudo abrir",S.err);return}
   if(!S.loaded){v.innerHTML=empty("Abriendo la liga…","Un momento.");return}
   CM=null;
-  var f={home:vHome,liga:vLiga,host3:vHost3,codigo:vCodigo,inicio:vInicio,tabla:vTabla,partidos:vPartidos,goleadores:vGoleadores,plantillas:vPlantillas,subir:vSubir,equipos:vEquipos,partido:vPartido}[S.tab]||vHome;
+  var f={home:vHome,liga:vLiga,host3:vHost3,codigo:vCodigo,inicio:vInicio,tabla:vTabla,partidos:vPartidos,goleadores:vGoleadores,plantillas:vPlantillas,equipo:vEquipo,subir:vSubir,equipos:vEquipos,partido:vPartido}[S.tab]||vHome;
   v.innerHTML=f();
   if(S.tab==="partido"&&S.cur&&S.mtab==="rep"&&S.cur.A&&!S.cur.rbuf&&!S.cur.rstate)loadReplay(S.cur);
   wireDrop();wireViewer();drawHeat();drawShots();
