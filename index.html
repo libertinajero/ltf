@@ -2090,7 +2090,7 @@ function muNext(dir){
 }
 function muInit(){
   MU.list=muList();if(!MU.list.length)return;
-  MU.on=muLS("ltf-music")!=="0";MU.shf=muLS("ltf-mshuf")==="1";
+  MU.on=true; /* en cada visita intenta arrancar sola; la pausa vale solo para la sesión */MU.shf=muLS("ltf-mshuf")==="1";
   var v=parseFloat(muLS("ltf-mvol"));if(v>=0&&v<=1)MU.vol=v;
   var i0=0; /* siempre arranca por la primera canción de la lista */
   var a=new Audio();a.preload="auto";a.volume=MU.vol;MU.a=a;
