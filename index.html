@@ -348,6 +348,7 @@ canvas#sc{cursor:pointer}
 .bracket{display:flex;gap:14px;overflow-x:auto;align-items:stretch}
 .bcol{flex:1;min-width:270px;display:flex;flex-direction:column;justify-content:space-around;gap:8px}
 .bcol .fx{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--row)}
+.musp button.on{background:var(--celeste);color:#06101c}
 </style>
 </head>
 <body>
@@ -2025,13 +2026,19 @@ document.addEventListener("fullscreenchange",fsIcon);document.addEventListener("
    Las canciones se listan en MUSIC_LIST (o en config.js con music:[{t:"Título",a:"Artista",f:"musica/archivo.mp3"}])
    ===================================================================== */
 var MUSIC_LIST=[
+  {t:"Feet Don't Fail Me Now",a:"Joy Crookes",f:"musica/feet-dont-fail-me-now.mp3"},
   {t:"Flashing Lights",a:"Kanye West",f:"musica/flashing-lights.mp3"},
   {t:"Massive",a:"Drake",f:"musica/massive.mp3"},
   {t:"Texts Go Green",a:"Drake",f:"musica/texts-go-green.mp3"},
   {t:"Flight's Booked",a:"Drake",f:"musica/flights-booked.mp3"},
-  {t:"FINE SHIT",a:"Playboi Carti",f:"musica/fine-shit.mp3"}
+  {t:"FINE SHIT",a:"Playboi Carti",f:"musica/fine-shit.mp3"},
+  {t:"Malbec",a:"Duki x Bizarrap",f:"musica/malbec.mp3"},
+  {t:"A Keeper",a:"Drake",f:"musica/a-keeper.mp3"},
+  {t:"No Idea",a:"Don Toliver",f:"musica/no-idea.mp3"},
+  {t:"Passionfruit",a:"Drake",f:"musica/passionfruit.mp3"},
+  {t:"Black Beatles",a:"Rae Sremmurd",f:"musica/black-beatles.mp3"}
 ];
-var MU={a:null,list:[],i:0,on:true,vol:.3,shuf:false,open:false,bad:false,fails:0,el:{},drag:false};
+var MU={a:null,list:[],i:0,on:true,vol:.3,shuf:false,open:false,bad:false,fails:0,el:{},drag:false,q:[],hist:[]};
 function mmss(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+("0"+t%60).slice(-2)}
 function muLS(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}return null}
 function muList(){
@@ -2046,7 +2053,7 @@ function muUI(){
   E.btn.classList.toggle("play",pl);E.btn.title="Reproductor de música";
   E.pp.textContent=pl?"⏸":"▶";E.pp.title=pl?"Pausa":"Reproducir";
   E.t.textContent=tr.t||"";E.ar.textContent=tr.a||"";
-  E.sh.classList.toggle("on",MU.shf);E.vl.textContent=(a.muted||a.volume===0)?"🔇":"🔊";
+  E.sh.classList.toggle("on",MU.shf);E.sh.setAttribute("aria-pressed",MU.shf?"true":"false");E.sh.title=MU.shf?"Aleatorio: activado":"Aleatorio: desactivado";E.vl.textContent=(a.muted||a.volume===0)?"🔇":"🔊";
   var one=MU.list.length<2;E.pv.hidden=one;E.nx.hidden=one;E.sh.hidden=one;
 }
 function muTime(){
@@ -2071,14 +2078,21 @@ function muGo(i,play){
 }
 function muNext(dir){
   var n=MU.list.length;if(n<2)return;
-  if(MU.shf&&dir>0){var r=MU.i;while(r===MU.i)r=Math.floor(Math.random()*n);muGo(r,true)}
-  else muGo(MU.i+dir,true);
+  if(MU.shf){
+    if(dir>0){
+      /* aleatorio sin repetir: se recorren todas las canciones en orden mezclado antes de volver a empezar */
+      if(!MU.q.length){var q=[],k,j,t;for(k=0;k<n;k++)if(k!==MU.i)q.push(k);for(k=q.length-1;k>0;k--){j=Math.floor(Math.random()*(k+1));t=q[k];q[k]=q[j];q[j]=t}MU.q=q}
+      MU.hist.push(MU.i);if(MU.hist.length>50)MU.hist.shift();
+      muGo(MU.q.pop(),true);
+    }else if(MU.hist.length)muGo(MU.hist.pop(),true);
+    else muGo(MU.i-1,true);
+  }else muGo(MU.i+dir,true);
 }
 function muInit(){
   MU.list=muList();if(!MU.list.length)return;
   MU.on=muLS("ltf-music")!=="0";MU.shf=muLS("ltf-mshuf")==="1";
   var v=parseFloat(muLS("ltf-mvol"));if(v>=0&&v<=1)MU.vol=v;
-  var i0=parseInt(muLS("ltf-mi"),10);if(!(i0>=0&&i0<MU.list.length))i0=0;
+  var i0=0; /* siempre arranca por la primera canción de la lista */
   var a=new Audio();a.preload="auto";a.volume=MU.vol;MU.a=a;
   var w=document.createElement("div");w.className="mu";w.hidden=true;
   w.innerHTML='<div class="musp" hidden>'+
@@ -2102,7 +2116,7 @@ function muInit(){
   };
   E.pv.onclick=function(){if(a.currentTime>4)a.currentTime=0;else muNext(-1)};
   E.nx.onclick=function(){muNext(1)};
-  E.sh.onclick=function(){MU.shf=!MU.shf;muLS("ltf-mshuf",MU.shf?"1":"0");muUI()};
+  E.sh.onclick=function(){MU.shf=!MU.shf;MU.q=[];MU.hist=[];muLS("ltf-mshuf",MU.shf?"1":"0");muUI()};
   E.vl.onclick=function(){a.muted=!a.muted;muUI()};
   E.vol.oninput=function(){var x=this.value/100;a.muted=false;a.volume=x;MU.vol=x;muLS("ltf-mvol",String(x));muUI()};
   E.pos.onpointerdown=function(){MU.drag=true};
