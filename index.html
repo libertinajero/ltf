@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#05070b">
 <title>LTF Temporada 1</title>
 <link rel="icon" href="logo.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Outfit:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap">
 <style>
 /* Layout: una columna. Banda de la liga, navegación, y debajo la vista activa.
    La página de un partido sigue el orden de MrREPLAY: cabecera, tarjeta con marcador y momentum, pestañas de detalle. */
@@ -393,21 +393,104 @@ canvas#sc{cursor:pointer}
 .tk .go a{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:2px 12px;background:var(--row)}
 .tk .go a:hover{border-color:var(--celeste);color:var(--celeste)}
 @media (max-width:760px){.hero3{grid-template-columns:1fr;padding:22px 18px}.hero3 .hlogo{grid-row:1;width:110px;justify-self:start}.duo{grid-template-columns:1fr}.board{grid-template-columns:repeat(2,1fr)}.board>div:nth-child(2){border-right:0}.board>div:nth-child(-n+2){border-bottom:1px dashed var(--line)}}
+/* ===== Rediseño estilo MrREPLAY: barra superior, portada, funciones, login ===== */
+:root{--mu:0px;--head:"Syne","Barlow Condensed",Arial,sans-serif;--body:"Outfit",system-ui,-apple-system,"Segoe UI",sans-serif}
+body{padding-left:0;padding-right:0}
+.flagbar{margin:0;height:6px}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h2{font-family:var(--head);font-weight:700;font-size:20px;letter-spacing:0;text-transform:none}
+nav#nav{position:static;padding:0}
+nav#nav:empty{display:none}
+nav button{font-family:var(--body);font-weight:600;font-size:14px;letter-spacing:0;text-transform:none;border-radius:999px;padding:7px 14px}
+nav.sub2 button{font-size:13px;padding:6px 12px}
+nav#subnav button{border-radius:0}
+.tb{position:sticky;top:var(--mu);z-index:50;background:rgba(3,6,15,.8);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.tb-in{max-width:920px;margin:0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;padding:10px max(16px,env(safe-area-inset-left,0px))}
+.tb-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);justify-self:start}
+.tb-brand img{width:38px;height:38px;object-fit:contain}
+.tb-brand b{display:block;font-family:var(--head);font-weight:800;font-size:19px;line-height:1;letter-spacing:.01em}
+.tb-brand small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.tb-links{display:flex;gap:2px;justify-self:center}
+.tb-links a{padding:8px 14px;border-radius:999px;color:var(--muted);font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;border:1px solid transparent}
+.tb-links a:hover{color:var(--ink)}
+.tb-links a[aria-current="page"]{color:var(--ink);background:rgba(116,172,223,.12);border-color:rgba(246,180,14,.55)}
+.tb-auth{display:flex;align-items:center;justify-content:flex-end;gap:8px;justify-self:end}
+.tb-auth button.tb-ghost{background:none;border:0;color:var(--ink);font-size:14px;padding:8px 10px}
+.tb-auth button.tb-ghost:hover{color:var(--celeste)}
+.tb-cta{background:var(--sun);color:#1b1500;font-weight:700;font-size:14px;border-radius:999px;padding:8px 18px;text-decoration:none;box-shadow:0 6px 18px -8px rgba(246,180,14,.8)}
+.tb-cta:hover{filter:brightness(1.08)}
+.tb-user{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;max-width:160px}
+.tb-user img{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:none;border:1px solid var(--line)}
+.tb-user b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-role{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sun);border:1px solid rgba(246,180,14,.5);border-radius:999px;padding:2px 10px}
+@media (max-width:1460px){:root{--mu:58px}}
+@media (max-width:720px){
+  .tb-in{display:flex;flex-wrap:wrap;gap:6px 10px}
+  .tb-brand small{display:none}
+  .tb-auth{margin-left:auto}
+  .tb-links{order:3;width:100%;margin:0;overflow-x:auto}
+  .tb-user b{display:none}
+}
+/* portada */
+.hx{position:relative;isolation:isolate;overflow:hidden;text-align:center;padding:58px 12px 26px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.hx::before{content:"";position:absolute;inset:0;z-index:-1;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 300' preserveAspectRatio='xMidYMid slice'%3E%3Cg fill='none' stroke='rgba(255,255,255,.1)' stroke-width='2.5'%3E%3Crect x='24' y='24' width='852' height='252' rx='6'/%3E%3Cpath d='M450 24V276'/%3E%3Ccircle cx='450' cy='150' r='52'/%3E%3Crect x='24' y='88' width='96' height='124'/%3E%3Crect x='780' y='88' width='96' height='124'/%3E%3C/g%3E%3C/svg%3E") center/cover no-repeat;-webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 78%);mask-image:radial-gradient(ellipse at center,#000 30%,transparent 78%)}
+.hx-wm{position:absolute;right:-20px;top:24px;width:min(300px,48%);opacity:.09;z-index:-1;pointer-events:none}
+.hx-pill{border:1px solid rgba(246,180,14,.5);background:rgba(246,180,14,.06);color:var(--sun);border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;padding:5px 16px}
+.hx-title{font-family:var(--head);font-weight:800;font-size:clamp(84px,22vw,190px);line-height:.9;margin:0;letter-spacing:-.03em;text-transform:none;background:linear-gradient(180deg,#fff 15%,#74acdf 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hx-sub{max-width:520px;color:var(--muted);font-size:16px;margin:0}
+.hx .cta .btn{border-radius:999px;padding:10px 22px;font-weight:600}
+.hx-stats{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 40px;margin-top:26px}
+.hx-stats b{display:block;font-family:var(--head);font-weight:700;font-size:clamp(28px,6vw,40px);color:var(--sun);line-height:1;font-variant-numeric:tabular-nums}
+.hx-stats span{font-size:12px;color:var(--muted)}
+/* funciones */
+.fn{scroll-margin-top:110px;display:flex;flex-direction:column;gap:6px;padding-top:30px}
+.fn-t{font-family:var(--head);font-weight:700;font-size:clamp(26px,5vw,38px);text-align:center;margin:0}
+.fn-s{text-align:center;color:var(--muted);margin:0 0 18px}
+.fn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.fn-c{position:relative;display:flex;flex-direction:column;padding:20px 18px 16px;border:1px solid var(--line);border-top:3px solid var(--celeste);border-radius:16px;background:linear-gradient(180deg,rgba(16,26,44,.75),rgba(8,14,26,.9));transition:transform .18s,border-color .18s,box-shadow .18s}
+.fn-c:hover{transform:translateY(-4px);border-color:rgba(116,172,223,.55);box-shadow:0 16px 30px -18px rgba(116,172,223,.6)}
+.fn-n{position:absolute;right:16px;top:10px;font-family:var(--head);font-weight:800;font-size:36px;line-height:1;color:rgba(116,172,223,.14)}
+.fn-ic{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;margin-bottom:12px;background:rgba(116,172,223,.12);border:1px solid rgba(116,172,223,.4);color:var(--celeste)}
+.fn-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hbtn .hi svg{width:36px;height:36px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hbtn .hi svg[aria-hidden][viewBox="0 0 24 24"] path[d^="M20.32"]{fill:currentColor;stroke:none}
+.fn-c h3{margin:0 0 4px;font-family:var(--head);font-weight:700;font-size:15px}
+.fn-c p{margin:0 0 10px;color:var(--muted);font-size:13px}
+.fn-go{display:flex;gap:6px}
+.fn-go a{font-size:12px;font-weight:600;padding:3px 12px;border-radius:999px;border:1px solid var(--line);color:var(--ink);text-decoration:none}
+.fn-go a:hover{border-color:var(--celeste);color:var(--celeste)}
+.hbtn b{font-family:var(--head);font-size:22px;letter-spacing:.01em}
+/* música */
+.spf{display:block;width:100%;border:0;border-radius:12px;margin-top:14px;background:#121212}
+.trk{display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;font-weight:400;color:var(--ink);background:var(--row);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:6px;cursor:pointer}
+.trk:hover{border-color:var(--celeste)}
+.trk .tn{font-family:var(--head);font-weight:700;color:var(--muted);font-size:14px;min-width:22px}
+.trk .tt{flex:1;min-width:0;display:flex;flex-direction:column;overflow-wrap:anywhere}
+.trk .tt b{font-weight:600}.trk .tt small{color:var(--muted);font-size:12px}
+.trk .tp{color:var(--muted);font-size:18px}
+.trk.on{border-color:var(--celeste);background:rgba(116,172,223,.12)}
+.trk.on .tp,.trk.on .tn{color:var(--celeste)}
+/* ventana de login */
+.mdl{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:rgba(3,6,15,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.mdl-card{width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px;padding:24px;border:1px solid var(--line);border-top:3px solid var(--celeste);border-radius:16px;background:linear-gradient(180deg,#101a2c,#0b1220);box-shadow:0 30px 60px -20px rgba(0,0,0,.8)}
+.mdl-card h2{margin:0;font-size:24px}
+.mdl-card p{margin:0;color:var(--muted);font-size:14px}
+.mdl-card button{border-radius:999px;padding:11px 16px;font-size:15px}
+.mdl-card .dc{background:#5865f2;color:#fff;border-color:#5865f2;display:flex;align-items:center;justify-content:center;gap:10px}
+.mdl-card .dc:hover{filter:brightness(1.1)}
+.mdl-card .dc svg{width:22px;height:22px;fill:currentColor}
+.mdl-card .st{font-size:13px;color:var(--warn);margin:0}
+.mdl-x{align-self:flex-end;background:none!important;border:0!important;color:var(--muted);padding:0!important;font-size:13px!important}
 </style>
 </head>
 <body>
 <div class="flagbar" role="presentation"></div>
+<header class="tb" id="top"></header>
 <div class="wrap">
-  <div class="brand">
-    <img alt="Logo de la LTF" src="logo.png">
-    <div>
-      <h1>LTF <span>Haxball</span></h1>
-      <p>Temporada 1</p>
-    </div>
-  </div>
   <nav id="nav" aria-label="Secciones"></nav>
   <div id="view" class="stack"></div>
 </div>
+<div id="modal"></div>
 
 <script src="config.js"></script>
 <script>
@@ -431,7 +514,7 @@ var MODES=["x5","x7"];
 var DISCORD_URL="https://discord.gg/BT5DZNH2Te"; /* pegá acá el link de invitación del Discord (o ponelo en config.js como discord:"https://...") */
 var SUBS=[["rep","Ver partido"],["par","Estadísticas"],["res","Alineaciones"],["jug","Jugadores"],["gol","Goles"],["pas","Pases"],["adv","Avanzado"],["cal","Mapas de calor"],["chat","Chat"],["eve","Cronología"],["per","Perfiles"]];
 function blankUp(){return {title:"",round:"",t1:"",t2:"",status:"",bad:false,busy:false,M:null,buf:null}}
-var S={teams:[],matches:[],role:"",code:"",canWrite:false,isAdmin:false,loaded:false,err:"",tab:"home",mode:"x5",roster:[],tm:null,R:{},rmsg:"",part:0,ssel:-1,
+var S={user:null,modal:false,authMsg:"",teams:[],matches:[],role:"",code:"",canWrite:false,isAdmin:false,loaded:false,err:"",tab:"home",mode:"x5",roster:[],tm:null,R:{},rmsg:"",part:0,ssel:-1,
   cur:null,curMsg:"",mtab:"rep",sort:{k:"r",d:-1},pf:0,pr:0,sf:0,heat:"t1",up:blankUp(),E:{id:"",name:"",color:"#2f66c9",logo:""},
   armed:"",banner:"",sig:"",busyTeam:false,fx:null,av:null,H:{a:"",b:""},FX:{round:"",stage:"",t1:"",t2:""},AV:{title:"",body:""}};
 var CM=null; // partido que se está dibujando ahora (vista previa o guardado)
@@ -843,15 +926,28 @@ function b64dec(str){var s=atob(str),u=new Uint8Array(s.length),i;for(i=0;i<s.le
 /* =====================================================================
    Vistas de la liga
    ===================================================================== */
+function ic(n){
+  var P={play:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M10 9l5 3-5 3z"/><path d="M8 21h8"/>',
+    tabla:'<path d="M3 21h18M5 21v-6h4v6M10 21V8h4v13M15 21v-9h4v9"/>',
+    fix:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 14h2M12 14h2M8 17h2"/>',
+    gol:'<path d="M3 19V9l3-4h12l3 4v10M3 9h18M9 5l-1.5 14M15 5l1.5 14M4 14h16"/>',
+    team:'<path d="M8 3L3 6l2 4 3-1v12h8V9l3 1 2-4-5-3a4 4 0 0 1-8 0z"/>',
+    vs:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+    cup:'<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4M12 13v4M8 21h8M10 17h4"/>',
+    pad:'<rect x="3" y="7" width="18" height="11" rx="5"/><path d="M8 10v5M5.5 12.5h5M15.5 11.5h.01M18 13.5h.01"/>',
+    chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+    note:'<path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>'};
+  return '<svg viewBox="0 0 24 24" aria-hidden="true">'+P[n]+'</svg>';
+}
 function vHome(){
   var dc=CFG.discord||DISCORD_URL,ms=S.matches||[],gl=0;
   ms.forEach(function(m){gl+=(+m.s1||0)+(+m.s2||0)});
   var pr=ms.length?(gl/ms.length).toFixed(1):"0";
-  var h='<section class="hero3"><div><div class="kick">Haxball · Temporada 1</div><h1 class="mega">LTF</h1><div class="flagline"></div>'+
-    '<p>La página oficial de LTF, acá vas a encontrar toda la información de la liga: replays, estadísticas, etc.</p>'+
-    '<div class="cta"><a class="btn primary" href="#liga">Ver Liga</a>'+(dc?'<a class="btn ghost" href="'+esc(dc)+'" target="_blank" rel="noopener">Discord</a>':"")+'</div></div>'+
-    '<img class="hlogo" src="logo.png" alt="Logo de la LTF"></section>'+
-    '<div class="board" aria-label="Marcador de la temporada"><div><b>'+ms.length+'</b><span>Replays</span></div><div><b>'+gl+'</b><span>Goles</span></div><div><b>'+(S.teams||[]).length+'</b><span>Equipos</span></div><div><b>'+pr+'</b><span>Goles x partido</span></div></div>'+avisosHTML();
+  var st=function(n,l){return '<div><b>'+n+'</b><span>'+l+'</span></div>'};
+  var h='<section class="hx"><img class="hx-wm" src="logo.png" alt=""><span class="hx-pill">Haxball · Temporada 1</span><h1 class="hx-title">LTF</h1>'+
+    '<p class="hx-sub">La página oficial de LTF, acá vas a encontrar toda la información de la liga: replays, estadísticas, etc.</p>'+
+    '<div class="cta"><a class="btn primary" href="#liga">▷ Ver Liga</a><a class="btn ghost" href="#funciones">Saber más</a>'+(dc?'<a class="btn ghost" href="'+esc(dc)+'" target="_blank" rel="noopener">Discord</a>':"")+'</div>'+
+    '<div class="hx-stats" aria-label="Resumen de la temporada">'+st(ms.length,"Replays")+st(gl,"Goles")+st((S.teams||[]).length,"Equipos")+st(pr,"Goles por partido")+'</div></section>'+avisosHTML();
   if(ms.length){
     var pod="",best=null;
     MODES.forEach(function(md){
@@ -865,16 +961,52 @@ function vHome(){
       (best?'<div class="gol"><small>Goleador</small><b>'+esc(best.name)+'</b> <span class="note" style="margin:0">'+best.n+(best.n===1?" gol":" goles")+(best.tn?" · "+esc(best.tn):"")+'</span></div>':"")+'</div></div>';
   }
   h+='<div class="hgrid">'+
-    '<a class="hbtn" href="#liga"><span class="hi">🏆</span><b>Liga</b><small>Tabla, replays, goleadores y plantillas · x5 y x7</small></a>'+
-    '<a class="hbtn soon" href="#host3"><span class="hi">🎮</span><b>Host x3</b><small>Estadísticas del host x3</small><em>Próximamente</em></a>'+
-    (dc?'<a class="hbtn" href="'+esc(dc)+'" target="_blank" rel="noopener"><span class="hi">💬</span><b>Discord</b><small>Sumate a la comunidad</small></a>'
-       :'<div class="hbtn soon"><span class="hi">💬</span><b>Discord</b><small>Sumate a la comunidad</small><em>Próximamente</em></div>')+
+    '<a class="hbtn" href="#liga"><span class="hi">'+ic("cup")+'</span><b>Liga</b><small>Tabla, replays, goleadores y plantillas · x5 y x7</small></a>'+
+    '<a class="hbtn" href="#musica"><span class="hi">'+ic("note")+'</span><b>Música</b><small>Los temas de la liga y tu playlist de Spotify</small></a>'+
+    '<a class="hbtn soon" href="#host3"><span class="hi">'+ic("pad")+'</span><b>Host x3</b><small>Estadísticas del host x3</small><em>Próximamente</em></a>'+
+    (dc?'<a class="hbtn" href="'+esc(dc)+'" target="_blank" rel="noopener"><span class="hi">'+DC_SVG+'</span><b>Discord</b><small>Sumate a la comunidad</small></a>'
+       :'<div class="hbtn soon"><span class="hi">'+DC_SVG+'</span><b>Discord</b><small>Sumate a la comunidad</small><em>Próximamente</em></div>')+
     '</div>';
-  var T=[["Replays","Cada partido, jugada por jugada","partidos"],["Tabla","Posiciones y últimos 5 partidos","tabla"],["Fixture","Fechas, resultados y playoffs","fixture"],
-    ["Goleadores","Quién la mete más","goleadores"],["Plantillas","Los jugadores de cada equipo","plantillas"],["Cara a cara","Dos equipos, un historial","h2h"]];
-  h+='<h2 style="text-align:center;margin-top:8px">Explorá la liga</h2><div class="tix">'+T.map(function(t,i){
-    return '<div class="tk"><div class="stub">'+(i+1<10?"0":"")+(i+1)+'</div><div class="bd"><b>'+t[0]+'</b><small>'+t[1]+'</small><div class="go"><a href="#x5-'+t[2]+'">x5</a><a href="#x7-'+t[2]+'">x7</a></div></div></div>';
-  }).join("")+'</div>';
+  var T=[["Replays","Mirá cada partido jugada por jugada, con mapas de calor, xG y chat.","partidos","play"],["Tabla","Posiciones, diferencia de gol y los últimos 5 partidos de cada equipo.","tabla","tabla"],["Fixture","Fechas, resultados y llaves de playoffs.","fixture","fix"],
+    ["Goleadores","Quién la mete más en cada modalidad.","goleadores","gol"],["Plantillas","Los jugadores habilitados de cada equipo.","plantillas","team"],["Cara a cara","Dos equipos, un historial completo.","h2h","vs"]];
+  h+='<section id="funciones" class="fn"><h2 class="fn-t">Explorá la liga</h2><p class="fn-s">Todo lo de la LTF, jugada por jugada y fecha por fecha</p><div class="fn-grid">'+T.map(function(t,i){
+    return '<div class="fn-c"><span class="fn-n">0'+(i+1)+'</span><span class="fn-ic">'+ic(t[3])+'</span><h3>'+t[0]+'</h3><p>'+t[1]+'</p><div class="fn-go"><a href="#x5-'+t[2]+'">x5</a><a href="#x7-'+t[2]+'">x7</a></div></div>';
+  }).join("")+'</div></section>';
+  return h;
+}
+/* ---- Música: temas de la liga + playlist de Spotify ---- */
+var SPMSG="",SPT={playlist:"playlist",album:"álbum",track:"canción",artist:"artista",show:"programa",episode:"episodio"};
+function spParse(v){
+  v=String(v||"").trim();if(!v)return null;
+  var m=v.match(/open\.spotify\.com\/(?:intl-[a-z]{2,3}\/)?(?:embed\/)?(playlist|album|track|artist|show|episode)\/([A-Za-z0-9]{22})/)||v.match(/^spotify:(playlist|album|track|artist|show|episode):([A-Za-z0-9]{22})$/);
+  return m?{t:m[1],id:m[2]}:null;
+}
+function spSaved(){var v="";try{v=localStorage.getItem("ltf-spotify")||""}catch(e){}return spParse(v)}
+function spGet(){return spSaved()||spParse(CFG.spotify)}
+function spSet(v){try{if(v)localStorage.setItem("ltf-spotify",v);else localStorage.removeItem("ltf-spotify")}catch(e){}}
+function saveSpotify(){
+  var el=$("spin"),p=spParse(el?el.value:"");
+  if(!p){SPMSG="Ese link no sirve. Abrí tu playlist en Spotify, tocá ⋯ → Compartir → Copiar enlace, y pegalo (tiene que empezar con open.spotify.com).";render();return}
+  spSet("https://open.spotify.com/"+p.t+"/"+p.id);SPMSG="";
+  MU.on=false;if(MU.a&&!MU.a.paused)MU.a.pause();
+  render();
+}
+function vMusica(){
+  var sp=spGet(),mine=!!spSaved(),h='<section class="landing"><span class="pill2">Música</span><h1 class="big">Poné tu <span>playlist</span></h1><p class="sub">Escuchá los temas de la liga o cargá tu playlist de Spotify para que suene mientras mirás los replays.</p></section>';
+  h+='<div class="panel"><h2>Tu playlist de Spotify</h2><p class="note" style="margin:0 0 10px">En Spotify abrí tu playlist, tocá los tres puntitos, después Compartir y Copiar enlace. Pegalo acá abajo. Queda guardada en este navegador.</p>'+
+    '<div class="row"><div class="grow"><label for="spin">Link de Spotify</label><input id="spin" type="text" autocomplete="off" placeholder="https://open.spotify.com/playlist/..."></div><button type="button" class="primary" data-sp="save">Guardar</button></div>'+
+    (SPMSG?'<p class="status bad" role="status">'+esc(SPMSG)+'</p>':"");
+  if(sp){
+    h+='<iframe class="spf" title="Spotify" src="https://open.spotify.com/embed/'+sp.t+'/'+sp.id+'?utm_source=generator&theme=0" height="'+(sp.t==="track"||sp.t==="episode"?152:380)+'" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>'+
+      '<p class="note">Pausé la música de fondo para que no se pisen. Si no tenés la sesión iniciada en Spotify en este navegador, solo vas a escuchar fragmentos de 30 segundos. Podés volver a activar la música de fondo desde el reproductor flotante.</p>'+
+      (mine?'<div class="cta" style="justify-content:flex-start"><button type="button" class="danger" data-sp="clear">Quitar mi playlist</button></div>':"");
+  }else h+='<p class="note">Todavía no cargaste ninguna playlist.</p>';
+  h+='</div>';
+  var L=MU.list||[];
+  if(L.length){
+    h+='<div class="panel"><h2>Música de la LTF</h2><p class="note" style="margin:0 0 8px">Son los temas que suenan de fondo en la página. Tocá uno para escucharlo.</p>'+
+      L.map(function(t,i){return '<button type="button" class="trk" data-trk="'+i+'"><span class="tn">'+(i+1<10?"0":"")+(i+1)+'</span><span class="tt"><b>'+esc(t.t)+'</b><small>'+esc(t.a)+'</small></span><span class="tp">♪</span></button>'}).join("")+'</div>';
+  }
   return h;
 }
 function vLiga(){
@@ -1882,7 +2014,7 @@ function parseHash(h){
   var m=h.match(/^partido-([0-9a-f-]{36})$/i);if(m)return {tab:"partido",id:m[1]};
   m=h.match(/^(x5|x7)-equipo-(.+)$/);if(m){var tid="";try{tid=decodeURIComponent(m[2])}catch(e){tid=m[2]}return {tab:"equipo",mode:m[1],teamId:tid}}
   m=h.match(/^(x5|x7)(?:-(subir|partidos|tabla|fixture|goleadores|plantillas|h2h))?$/);if(m)return {tab:m[2]||"inicio",mode:m[1]};
-  if(/^(liga|host3|codigo|equipos)$/.test(h))return {tab:h};
+  if(/^(liga|host3|codigo|equipos|musica)$/.test(h))return {tab:h};
   if(/^(subir|partidos|tabla|goleadores)$/.test(h))return {tab:h,mode:"x5"}; /* links viejos */
   return {tab:"home"};
 }
@@ -1896,8 +2028,11 @@ function route(){
     if(!S.cur||S.cur.id!==P.id){S.cur=null;if(S.loaded){openMatch(P.id);return}}
   }else{
     S.tab=P.tab;S.cur=null;if(S.tab!=="subir")S.banner="";
+    /* con una playlist de Spotify puesta, se pausa la música de fondo para que no suenen las dos juntas */
+    if(P.tab==="musica"&&spGet()){MU.on=false;if(MU.a&&!MU.a.paused)MU.a.pause()}
   }
   render();
+  if(location.hash==="#funciones"){var fn=$("funciones");if(fn)fn.scrollIntoView({behavior:"smooth",block:"start"})}
 }
 var MODE_TABS=["inicio","subir","partidos","tabla","fixture","goleadores","plantillas","h2h","equipo"];
 function modeCtx(){
@@ -1908,7 +2043,7 @@ function backHash(){
   var t=S.tab;
   if(t==="home")return null;
   if(t==="partido")return modeCtx()+"-partidos";
-  if(t==="liga"||t==="host3"||t==="codigo")return "home";
+  if(t==="liga"||t==="host3"||t==="codigo"||t==="musica")return "home";
   if(t==="equipos"||t==="inicio")return "liga";
   if(t==="equipo")return S.mode+"-tabla";
   return S.mode;
@@ -1917,15 +2052,71 @@ function navHTML(){
   var b=backHash(),md=modeCtx(),act=S.tab==="partido"?"partidos":(S.tab==="equipo"?"tabla":S.tab),h="";
   if(b!==null)h+='<button type="button" class="navback" data-h="'+b+'" aria-label="Volver atrás">← Atrás</button>';
   if(md)MTABS.forEach(function(t){h+='<button type="button" data-h="'+(t[0]==="inicio"?md:md+"-"+t[0])+'"'+(act===t[0]?' aria-current="page"':"")+'>'+t[1]+'</button>'});
-  return h+'<button type="button" data-act="codebtn" style="margin-left:auto;flex:none">'+(S.role?"Salir":"Ingresar código")+'</button>';
+  return h;
 }
+/* Barra superior (estilo MrREPLAY) y ventana de login */
+var DC_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.89-1.52.07.07 0 0 0-.08.04c-.21.38-.44.87-.61 1.25a18.3 18.3 0 0 0-5.49 0c-.16-.39-.41-.87-.62-1.25a.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.88 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.06 19.9 19.9 0 0 0 5.99 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.23-2a.08.08 0 0 0-.04-.11 13 13 0 0 1-1.87-.89.08.08 0 0 1-.01-.13c.13-.09.25-.19.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01c.12.1.25.2.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.77 1.37 1.23 2a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 0 0-.03-.03zM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42s.95-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42zm7.97 0c-1.18 0-2.16-1.08-2.16-2.42s.95-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42z"/></svg>';
+function topHTML(){
+  var md=S.mode||"x5",cur=S.tab==="partido"?"partidos":S.tab,a="";
+  var L=[["Inicio","#",cur==="home"],["Subir Replay","#"+md+"-subir",cur==="subir"],["Replays","#"+md+"-partidos",cur==="partidos"],["Música","#musica",cur==="musica"]];
+  if(S.user)a+='<span class="tb-user">'+(S.user.avatar?'<img alt="" src="'+esc(S.user.avatar)+'">':"")+'<b>'+esc(S.user.name)+'</b></span>';
+  if(S.role)a+='<span class="tb-role">'+(S.isAdmin?"Admin":"Capitán")+'</span>';
+  if(S.user||S.role)a+='<button type="button" class="tb-ghost" data-act="logoutall">Salir</button>';
+  else a+='<button type="button" class="tb-ghost" data-act="openlogin">Entrar</button>';
+  return '<div class="tb-in"><a class="tb-brand" href="#"><img src="logo.png" alt="Logo de la LTF"><span><b>LTF</b><small>Temporada 1</small></span></a>'+
+    '<div class="tb-links" role="navigation" aria-label="Principal">'+L.map(function(x){return '<a href="'+x[1]+'"'+(x[2]?' aria-current="page"':"")+'>'+x[0]+'</a>'}).join("")+'</div>'+
+    '<div class="tb-auth">'+a+'</div></div>';
+}
+function modalHTML(){
+  if(!S.modal)return "";
+  return '<div class="mdl" data-act="closelogin"><div class="mdl-card" role="dialog" aria-modal="true" aria-label="Entrar a LTF"><button type="button" class="mdl-x" data-act="closelogin">Cerrar ✕</button>'+
+    '<h2>Entrar a LTF</h2><p>Iniciá sesión con tu cuenta de Discord, o usá tu código si sos capitán o admin de la liga.</p>'+
+    '<button type="button" class="dc" data-act="discord">'+DC_SVG+'Continuar con Discord</button>'+
+    '<button type="button" data-act="gotocode">Tengo un código de capitán o admin</button>'+
+    (S.authMsg?'<p class="st" role="status">'+esc(S.authMsg)+'</p>':"")+'</div></div>';
+}
+/* Sesión con Discord a través de Supabase Auth (flujo implícito, sin librerías) */
+function authStore(s){try{if(s)localStorage.setItem("ltf-sess",JSON.stringify(s));else localStorage.removeItem("ltf-sess")}catch(e){}}
+function authLoad(){try{return JSON.parse(localStorage.getItem("ltf-sess")||"null")}catch(e){return null}}
+function authCapture(){
+  var h=location.hash.slice(1);
+  if(h.indexOf("access_token=")<0&&h.indexOf("error_description=")<0)return;
+  var p={};h.split("&").forEach(function(kv){var i=kv.indexOf("=");if(i>0){try{p[kv.slice(0,i)]=decodeURIComponent(kv.slice(i+1).replace(/\+/g," "))}catch(e){}}});
+  try{history.replaceState(null,"",location.pathname+location.search)}catch(e){location.hash=""}
+  if(p.error_description){S.authMsg=p.error_description;S.modal=true;return}
+  if(p.access_token)authStore({at:p.access_token,rt:p.refresh_token||"",exp:Date.now()+(+p.expires_in||3600)*1000});
+}
+function authRefresh(s){
+  if(!s.rt)return Promise.resolve(null);
+  return fetch(CFG.url+"/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{apikey:CFG.key,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:s.rt})})
+    .then(function(r){if(!r.ok)throw r.status;return r.json()})
+    .then(function(j){var n={at:j.access_token,rt:j.refresh_token||s.rt,exp:Date.now()+(+j.expires_in||3600)*1000};authStore(n);return n})
+    .catch(function(){authStore(null);return null});
+}
+function authInit(){
+  var s=authLoad();if(!s||!s.at)return;
+  (Date.now()>s.exp-30000?authRefresh(s):Promise.resolve(s)).then(function(s2){
+    if(!s2)return;
+    return fetch(CFG.url+"/auth/v1/user",{headers:{apikey:CFG.key,Authorization:"Bearer "+s2.at}}).then(function(r){if(!r.ok)throw r.status;return r.json()}).then(function(u){
+      var m=u.user_metadata||{};
+      S.user={id:u.id,name:(m.custom_claims&&m.custom_claims.global_name)||m.full_name||m.name||m.user_name||m.preferred_username||String(u.email||"").split("@")[0]||"usuario",avatar:m.avatar_url||m.picture||""};
+      render();
+    });
+  }).catch(function(e){if(e===401||e===403){authStore(null);S.user=null;render()}});
+}
+function discordLogin(){
+  if(!CFG.url){S.authMsg="Falta configurar la conexión (config.js).";render();return}
+  location.href=CFG.url+"/auth/v1/authorize?provider=discord&redirect_to="+encodeURIComponent(location.origin+location.pathname+location.search);
+}
+function logoutAll(){authStore(null);S.user=null;if(S.role)logout();else render()}
 function render(){
+  $("top").innerHTML=topHTML();$("modal").innerHTML=modalHTML();
   $("nav").innerHTML=navHTML();
   var v=$("view");
   if(S.err&&!S.loaded){v.innerHTML=empty("No se pudo abrir",S.err);return}
   if(!S.loaded){v.innerHTML=empty("Abriendo la liga…","Un momento.");return}
   CM=null;
-  var f={home:vHome,liga:vLiga,host3:vHost3,codigo:vCodigo,inicio:vInicio,tabla:vTabla,partidos:vPartidos,goleadores:vGoleadores,plantillas:vPlantillas,fixture:vFixture,h2h:vH2H,equipo:vEquipo,subir:vSubir,equipos:vEquipos,partido:vPartido}[S.tab]||vHome;
+  var f={home:vHome,liga:vLiga,host3:vHost3,codigo:vCodigo,inicio:vInicio,tabla:vTabla,partidos:vPartidos,goleadores:vGoleadores,plantillas:vPlantillas,fixture:vFixture,h2h:vH2H,equipo:vEquipo,subir:vSubir,equipos:vEquipos,musica:vMusica,partido:vPartido}[S.tab]||vHome;
   v.innerHTML=f();
   if(S.tab==="partido"&&S.cur&&S.mtab==="rep"&&S.cur.A&&!S.cur.rbuf&&!S.cur.rstate)loadReplay(S.cur);
   wireDrop();wireViewer();drawHeat();drawShots();
@@ -2107,6 +2298,28 @@ $("view").addEventListener("change",function(e){
     render();
   }
 });
+$("view").addEventListener("click",function(e){
+  var t=e.target.closest("[data-trk]"),a=MU.a;
+  if(t&&a){
+    var i=+t.dataset.trk;
+    if(i===MU.i){if(a.paused){MU.on=true;muLS("ltf-music","1");var p=a.play();if(p&&p.catch)p.catch(function(){})}else{MU.on=false;a.pause()}muUI()}
+    else muGo(i,true);
+    return;
+  }
+  var b=e.target.closest("[data-sp]");if(!b)return;
+  if(b.dataset.sp==="save")saveSpotify();
+  else if(b.dataset.sp==="clear"){spSet("");SPMSG="";render()}
+});
+document.body.addEventListener("click",function(e){
+  var b=e.target.closest("[data-act]");if(!b||b.closest("#view")||b.closest("#nav"))return;
+  var a=b.dataset.act;
+  if(a==="openlogin"){S.modal=true;S.authMsg="";render()}
+  else if(a==="closelogin"){if(e.target===b||b.tagName==="BUTTON"){S.modal=false;render()}}
+  else if(a==="discord")discordLogin();
+  else if(a==="gotocode"){S.modal=false;if(location.hash==="#codigo")render();else location.hash="codigo"}
+  else if(a==="logoutall")logoutAll();
+});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&S.modal){S.modal=false;render()}});
 $("view").addEventListener("keydown",function(e){if(e.target.id==="code"&&e.key==="Enter")enterCode();if(e.target.dataset&&e.target.dataset.rn!==undefined&&e.key==="Enter")addPlayer(e.target.dataset.rn)});
 window.addEventListener("hashchange",route);
 document.addEventListener("keydown",function(e){
@@ -2153,6 +2366,7 @@ function muUI(){
   E.t.textContent=tr.t||"";E.ar.textContent=tr.a||"";
   E.sh.classList.toggle("on",MU.shf);E.sh.setAttribute("aria-pressed",MU.shf?"true":"false");E.sh.title=MU.shf?"Aleatorio: activado":"Aleatorio: desactivado";E.vl.textContent=(a.muted||a.volume===0)?"🔇":"🔊";
   var one=MU.list.length<2;E.pv.hidden=one;E.nx.hidden=one;E.sh.hidden=one;
+  var rows=document.querySelectorAll(".trk"),k;for(k=0;k<rows.length;k++){var on=+rows[k].dataset.trk===MU.i&&pl;rows[k].classList.toggle("on",on);rows[k].querySelector(".tp").textContent=on?"♫":"♪"}
 }
 function muTime(){
   var E=MU.el,a=MU.a;if(!E.w||!a)return;
@@ -2197,13 +2411,14 @@ function muInit(){
     '<div class="mhead"><img class="mcov" alt="" src="logo.png"><div class="minfo"><b></b><span></span></div></div>'+
     '<input type="range" min="0" max="1000" value="0" data-m="pos" aria-label="Posición">'+
     '<div class="mtime"><span data-m="c">0:00</span><span data-m="d">0:00</span></div>'+
-    '<div class="mctl"><button type="button" data-m="sh" title="Aleatorio">🔀</button><button type="button" data-m="pv" title="Anterior">⏮</button><button type="button" class="big" data-m="pp" aria-label="Reproducir o pausar">▶</button><button type="button" data-m="nx" title="Siguiente">⏭</button>'+
+    '<div class="mctl"><button type="button" data-m="pl" title="Música y Spotify">♫</button><button type="button" data-m="sh" title="Aleatorio">🔀</button><button type="button" data-m="pv" title="Anterior">⏮</button><button type="button" class="big" data-m="pp" aria-label="Reproducir o pausar">▶</button><button type="button" data-m="nx" title="Siguiente">⏭</button>'+
     '<span class="mvol"><button type="button" data-m="vl" title="Silenciar">🔊</button><span class="vpop"><div><input type="range" min="0" max="100" value="'+Math.round(MU.vol*100)+'" data-m="vol" aria-label="Volumen"></div></span></span></div>'+
     '</div>';
   document.body.appendChild(w);
   var q=function(k){return w.querySelector('[data-m="'+k+'"]')},E=MU.el;
   E.w=w;E.panel=w.querySelector(".musp");E.t=w.querySelector(".minfo b");E.ar=w.querySelector(".minfo span");
-  ["pos","c","d","sh","pv","pp","nx","vl","vol"].forEach(function(k){E[k]=q(k)});
+  ["pos","c","d","pl","sh","pv","pp","nx","vl","vol"].forEach(function(k){E[k]=q(k)});
+  E.pl.onclick=function(){location.hash="musica"};
   E.pp.onclick=function(){
     if(a.paused){MU.on=true;muLS("ltf-music","1");var p=a.play();if(p&&p.catch)p.catch(function(){})}
     else{MU.on=false;muLS("ltf-music","0");a.pause()}
@@ -2238,11 +2453,13 @@ muInit();
 /* =====================================================================
    Arranque
    ===================================================================== */
+authCapture();
 render();
 if(!CFG.url||!CFG.key||/PEGAR_AQUI/.test(CFG.url+CFG.key)){
   S.err="Falta configurar la conexión. Completá el archivo config.js con la dirección y la clave de tu proyecto de Supabase.";render();return;
 }
 loadAll(true);
+authInit();
 setInterval(function(){loadAll(false)},60000);
 var saved="";try{saved=localStorage.getItem("ltf-code")||""}catch(e){}
 if(saved)checkCode(saved).then(function(r){if(r){S.code=saved;setRole(r);render()}else{try{localStorage.removeItem("ltf-code")}catch(e){}}}).catch(function(){});
