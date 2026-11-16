@@ -517,6 +517,14 @@ a.btn.ghost:hover{border-color:var(--celeste);color:var(--celeste)}
 .pcard,.brand,.hero,.mvp{border-radius:16px}
 .trk{border-radius:12px}
 .trk.on{border-color:var(--celeste);background:rgba(116,172,223,.12)}
+
+/* Spotify persistente (sigue sonando al cambiar de sección) */
+#spdock{position:fixed;left:0;bottom:0;width:300px;height:152px;opacity:0;pointer-events:none;z-index:-1;overflow:hidden;border-radius:12px;background:#121212}
+#spdock.on{position:absolute;opacity:1;pointer-events:auto;z-index:5}
+#spdock iframe,#sphost iframe{border:0;width:100%;height:100%;display:block}
+#sphost{width:100%;height:100%}
+#spslot{border-radius:12px;background:#121212}
+#spslot .spf{margin:0;height:100%}
 </style>
 </head>
 <body>
@@ -1033,9 +1041,9 @@ function vMusica(){
     '<div class="row"><div class="grow"><label for="spin">Link de Spotify</label><input id="spin" type="text" autocomplete="off" placeholder="https://open.spotify.com/playlist/..."></div><button type="button" class="primary" data-sp="save">Guardar</button></div>'+
     (SPMSG?'<p class="status bad" role="status">'+esc(SPMSG)+'</p>':"");
   if(sp){
-    h+='<iframe class="spf" title="Spotify" src="https://open.spotify.com/embed/'+sp.t+'/'+sp.id+'?utm_source=generator&theme=0" height="'+(sp.t==="track"||sp.t==="episode"?152:380)+'" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>'+
+    h+='<div id="spslot" style="height:'+(sp.t==="track"||sp.t==="episode"?152:380)+'px;margin-top:14px"></div>'+
       '<div class="cta" style="justify-content:flex-start;margin-top:12px"><a class="btn spbtn" href="https://open.spotify.com/'+sp.t+'/'+sp.id+'" target="_blank" rel="noopener">'+IC.sp+'Abrir en Spotify</a></div>'+
-      '<p class="note">Pausé la música de fondo para que no se pisen. '+(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)?'En el celu el reproductor de acá suele quedarse en fragmentos de 30 segundos aunque tengas la sesión iniciada, porque el navegador bloquea la sesión de Spotify dentro de otras páginas. Tocá “Abrir en Spotify” y la escuchás completa en la app.':'Si no tenés la sesión iniciada en Spotify en este navegador, solo vas a escuchar fragmentos de 30 segundos. Iniciá sesión en open.spotify.com y recargá, o usá “Abrir en Spotify”.')+' Podés volver a activar la música de fondo desde el reproductor flotante.</p>'+
+      '<p class="note">La música de fondo queda desactivada mientras uses Spotify. '+(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)?'En el celu el reproductor de acá suele quedarse en fragmentos de 30 segundos aunque tengas la sesión iniciada, porque el navegador bloquea la sesión de Spotify dentro de otras páginas. Tocá “Abrir en Spotify” y la escuchás completa en la app.':'Si no tenés la sesión iniciada en Spotify en este navegador, solo vas a escuchar fragmentos de 30 segundos. Iniciá sesión en open.spotify.com y recargá, o usá “Abrir en Spotify”.')+' Mientras tengas tu playlist cargada, el reproductor flotante controla Spotify (play y barra de tiempo); para cambiar de tema usá el reproductor de Spotify de esta página. Para volver a la música de la liga, tocá “Quitar mi playlist”.</p>'+
       (mine?'<div class="cta" style="justify-content:flex-start"><button type="button" class="danger" data-sp="clear">Quitar mi playlist</button></div>':"");
   }else h+='<p class="note">Todavía no cargaste ninguna playlist.</p>';
   h+='</div>';
@@ -2408,20 +2416,61 @@ var IC={
   vol:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>',
   mute:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>'
 };
+var SP={ctrl:null,uri:"",box:null,paused:true,pos:0,dur:0,creating:false,loading:false,fail:false};
+function spPlace(){
+  var b=SP.box;if(!b)return;
+  var sl=document.getElementById("spslot");
+  if(sl){
+    if(SP.fail&&!sl.firstChild){var q=spGet();if(q)sl.innerHTML='<iframe class="spf" title="Spotify" src="https://open.spotify.com/embed/'+q.t+'/'+q.id+'?utm_source=generator&theme=0" style="margin:0;height:100%" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>'}
+    var r=sl.getBoundingClientRect();
+    b.className="on";
+    b.style.left=(r.left+window.pageXOffset)+"px";b.style.top=(r.top+window.pageYOffset)+"px";b.style.width=r.width+"px";b.style.height=r.height+"px";
+  }else{b.className="";b.style.left=b.style.top=b.style.width=b.style.height=""}
+}
+function spEnsure(){
+  var sp=spGet();
+  if(!sp||(SP.ctrl&&SP.uri!=="spotify:"+sp.t+":"+sp.id)){
+    if(SP.ctrl){try{SP.ctrl.destroy()}catch(e){}}
+    SP.ctrl=null;SP.uri="";SP.paused=true;SP.pos=SP.dur=0;SP.creating=false;
+    if(SP.box){SP.box.remove();SP.box=null}
+    if(!sp)return;
+  }
+  if(SP.ctrl||SP.creating||SP.fail)return;
+  var make=function(api){
+    var q=spGet();if(!q||SP.ctrl||SP.creating)return;
+    SP.creating=true;
+    var b=document.createElement("div");b.id="spdock";b.innerHTML='<div id="sphost"></div>';document.body.appendChild(b);SP.box=b;
+    var uri="spotify:"+q.t+":"+q.id;
+    api.createController(document.getElementById("sphost"),{uri:uri,width:"100%",height:"100%"},function(c){
+      SP.creating=false;SP.ctrl=c;SP.uri=uri;
+      c.addListener("playback_update",function(e){var d=(e&&e.data)||{};SP.paused=!!d.isPaused;SP.pos=d.position||0;SP.dur=d.duration||0;muUI();muTime()});
+      spPlace();muUI();
+    });
+    spPlace();
+  };
+  if(window.__spApi){make(window.__spApi);return}
+  if(SP.loading)return;
+  SP.loading=true;
+  window.onSpotifyIframeApiReady=function(api){window.__spApi=api;SP.loading=false;make(api)};
+  var sc=document.createElement("script");sc.src="https://open.spotify.com/embed/iframe-api/v1";sc.async=true;
+  sc.onerror=function(){SP.loading=false;SP.fail=true;if(!SP.box){var b=document.createElement("div");b.id="spdock";document.body.appendChild(b);SP.box=b}spPlace()};
+  document.head.appendChild(sc);
+  setTimeout(function(){if(!window.__spApi&&!SP.ctrl){SP.fail=true;if(!SP.box){var b=document.createElement("div");b.id="spdock";document.body.appendChild(b);SP.box=b}spPlace()}},8000);
+}
 function muUI(){
   var E=MU.el,a=MU.a;if(!E.w||!a)return;
-  var pl=!a.paused,tr=MU.list[MU.i]||{};
+  var spm=!!spGet(),pl=spm?!SP.paused:!a.paused,tr=MU.list[MU.i]||{};
   E.pp.innerHTML=pl?IC.pause:IC.play;E.pp.title=pl?"Pausa":"Reproducir";
   E.t.textContent=tr.t||"";E.ar.textContent=tr.a||"";
-  var spm=!!spGet()&&!pl; /* con playlist de Spotify y la música de fondo en pausa: logo de Spotify; si no, icono de música */
   E.cov.className="mcov"+(spm?" sp":"");E.cov.innerHTML=spm?IC.sp:IC.note;
-  if(spm){E.t.textContent="Spotify";E.ar.textContent="Tu playlist"}
+  if(spm){E.t.textContent="Spotify";E.ar.textContent=SP.ctrl?(pl?"Sonando":"Tu playlist"):(SP.fail?"Tu playlist":"Cargando…")}
   E.sh.classList.toggle("on",MU.shf);E.sh.setAttribute("aria-pressed",MU.shf?"true":"false");E.sh.title=MU.shf?"Aleatorio: activado":"Aleatorio: desactivado";E.vl.innerHTML=(a.muted||a.volume===0)?IC.mute:IC.vol;
-  var one=MU.list.length<2||MU.bad;E.pp.hidden=MU.bad;E.pv.hidden=one;E.nx.hidden=one;E.sh.hidden=one;
-  var rows=document.querySelectorAll(".trk"),k;for(k=0;k<rows.length;k++){var on=+rows[k].dataset.trk===MU.i&&pl;rows[k].classList.toggle("on",on);rows[k].querySelector(".tp").textContent=on?"♫":"♪"}
+  var one=MU.list.length<2||MU.bad||spm;E.pp.hidden=MU.bad&&!spm;E.pv.hidden=one;E.nx.hidden=one;E.sh.hidden=one;
+  var rows=document.querySelectorAll(".trk"),k;for(k=0;k<rows.length;k++){var on=+rows[k].dataset.trk===MU.i&&pl&&!spm;rows[k].classList.toggle("on",on);rows[k].querySelector(".tp").textContent=on?"♫":"♪"}
 }
 function muTime(){
   var E=MU.el,a=MU.a;if(!E.w||!a)return;
+  if(spGet()){E.c.textContent=mmss(SP.pos/1000);E.d.textContent=mmss(SP.dur/1000);if(!MU.drag)E.pos.value=SP.dur?Math.round(SP.pos/SP.dur*1000):0;return}
   var d=isFinite(a.duration)?a.duration:0;
   E.c.textContent=mmss(a.currentTime);E.d.textContent=mmss(d);
   if(!MU.drag)E.pos.value=d?Math.round(a.currentTime/d*1000):0;
@@ -2433,7 +2482,7 @@ function muSync(){
   var onSp=!!spGet()&&/^#?musica/.test(location.hash||"");
   if(onSp&&!MU.wasSp){MU.on=false;if(!a.paused)a.pause()}
   MU.wasSp=onSp;
-  var want=MU.on&&!MU.bad;
+  var want=MU.on&&!MU.bad&&!spGet();
   if(want){if(a.paused){var p=a.play();if(p&&p.catch)p.catch(function(){})}}
   else if(!a.paused)a.pause();
   muUI();
@@ -2472,10 +2521,11 @@ function muInit(){
     '</div>';
   document.body.appendChild(w);
   var q=function(k){return w.querySelector('[data-m="'+k+'"]')},E=MU.el;
-  E.w=w;E.cov=w.querySelector(".mcov");E.cov.onclick=function(){if(spGet()&&a.paused)location.hash="musica"};E.panel=w.querySelector(".musp");E.t=w.querySelector(".minfo b");E.ar=w.querySelector(".minfo span");
+  E.w=w;E.cov=w.querySelector(".mcov");E.cov.onclick=function(){if(spGet())location.hash="musica"};E.panel=w.querySelector(".musp");E.t=w.querySelector(".minfo b");E.ar=w.querySelector(".minfo span");
   ["pos","c","d","pl","sh","pv","pp","nx","vl","vol"].forEach(function(k){E[k]=q(k)});
   E.pl.onclick=function(){location.hash="musica"};
   E.pp.onclick=function(){
+    if(spGet()){if(SP.ctrl)SP.ctrl.togglePlay();else spEnsure();return}
     if(a.paused){MU.on=true;muLS("ltf-music","1");var p=a.play();if(p&&p.catch)p.catch(function(){})}
     else{MU.on=false;muLS("ltf-music","0");a.pause()}
     muUI();
@@ -2486,7 +2536,7 @@ function muInit(){
   E.vl.onclick=function(){a.muted=!a.muted;muUI()};
   E.vol.oninput=function(){var x=this.value/100;a.muted=false;a.volume=x;MU.vol=x;muLS("ltf-mvol",String(x));muUI()};
   E.pos.onpointerdown=function(){MU.drag=true};
-  E.pos.oninput=function(){var d=isFinite(a.duration)?a.duration:0;if(d)a.currentTime=this.value/1000*d;muTime()};
+  E.pos.oninput=function(){if(spGet()){if(SP.ctrl&&SP.dur)SP.ctrl.seek(this.value/1000*SP.dur/1000);return}var d=isFinite(a.duration)?a.duration:0;if(d)a.currentTime=this.value/1000*d;muTime()};
   E.pos.onchange=function(){MU.drag=false};
   a.addEventListener("timeupdate",muTime);a.addEventListener("loadedmetadata",muTime);
   a.addEventListener("play",muUI);a.addEventListener("pause",muUI);
@@ -2501,7 +2551,10 @@ function muInit(){
   /* los navegadores no dejan sonar solos: arranca con el primer toque o tecla */
   var kick=function(e){if(e.target&&e.target.closest&&e.target.closest(".mu"))return;["pointerdown","keydown","touchstart"].forEach(function(n){document.removeEventListener(n,kick,true)});muSync()};
   ["pointerdown","keydown","touchstart"].forEach(function(n){document.addEventListener(n,kick,true)});
-  var r0=render;render=function(){r0.apply(this,arguments);muSync()};
+  /* si tocás play dentro del reproductor de Spotify (iframe), se pausa la música de fondo para que no suenen las dos juntas */
+  window.addEventListener("blur",function(){setTimeout(function(){var f=document.activeElement;if(f&&f.tagName==="IFRAME"&&f.classList.contains("spf")&&!a.paused){MU.on=false;a.pause();muUI()}},0)});
+  var r0=render;render=function(){r0.apply(this,arguments);spEnsure();spPlace();muSync()};
+  window.addEventListener("resize",spPlace);setInterval(spPlace,800);
   muSync();
 }
 muInit();
