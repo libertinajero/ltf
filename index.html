@@ -535,6 +535,39 @@ a.tile b{font-weight:600;font-size:17px;line-height:1.2}
 .tk .go a,.fn-go a{font-weight:600}
 .spwarn{margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(116,172,223,.4);background:rgba(116,172,223,.1);color:var(--chalk);font-size:13px;line-height:1.5}
 .spwarn b{display:block;color:#fff;margin-bottom:2px}
+
+/* ===== Barra superior centrada + menú de secciones centrado ===== */
+@media (min-width:721px){
+  .tb-in{grid-template-columns:1fr;justify-items:center;gap:8px;padding:12px 16px 10px;position:relative}
+  .tb-brand{justify-self:center;gap:12px}
+  .tb-brand img{width:46px;height:46px}
+  .tb-brand b{font-size:24px;letter-spacing:.02em}
+  .tb-brand small{font-size:12px;margin-top:3px}
+  .tb-links{justify-self:center}
+  .tb-auth{position:absolute;right:16px;top:14px}
+  nav{justify-content:center;flex-wrap:wrap;overflow:visible}
+}
+@media (min-width:1461px){.mu{top:118px}}
+
+/* ===== Todo centrado: logo y texto de la barra, y marca de agua de la portada ===== */
+@media (min-width:721px){
+  .tb-brand{flex-direction:column;gap:4px;text-align:center}
+  .tb-brand img{width:42px;height:42px}
+  .tb-brand span{display:flex;align-items:baseline;justify-content:center;gap:8px}
+  .tb-brand b{font-size:18px}
+  .tb-brand small{margin-top:0}
+}
+@media (min-width:1461px){.mu{top:130px}}
+.hx-wm{right:auto;left:50%;transform:translateX(-50%);top:34px;width:min(340px,62%)}
+.hx-title{padding-right:.03em}
+.tag-aj{color:#cfe6ff;background:rgba(116,172,223,.14);border:1px solid rgba(116,172,223,.4);border-radius:999px;padding:1px 10px;font-size:11px;font-weight:600}
+.pfbar{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 14px}
+.pfchip{border:1px solid var(--line);background:transparent;color:var(--muted);font-size:13px;font-weight:600;padding:7px 14px}
+.pfchip em{font-style:normal;opacity:.7;margin-left:4px}
+.pfchip.on{background:rgba(116,172,223,.18);border-color:var(--celeste);color:#fff}
+.mcard.aj{border-style:dashed;border-color:rgba(116,172,223,.35);background:rgba(10,18,32,.55)}
+.mcard.aj .sc{opacity:.8}
+.tag-of{color:#bfe1ff;font-weight:600}
 </style>
 </head>
 <body>
@@ -582,6 +615,7 @@ function sideTeam(m,side){
   return {id:"",name:(side===1?m.n1:m.n2)||(side===1?"Rojo":"Azul"),color:side===1?"#d8483b":"#3f7be0",logo:""};
 }
 function mOf(m){return m&&m.mode==="x7"?"x7":"x5"}
+function isOff(m){return !!(m&&m.t1&&m.t2)} /* oficial = los dos equipos de la liga; si no, es un replay ajeno y no suma stats */
 function modeMatches(md){return S.matches.filter(function(m){return mOf(m)===md})}
 function modeTeams(md){
   if(!S.tm)return S.teams;
@@ -604,7 +638,7 @@ function standings(md){
 function scorerName(l){var m=String(l).match(/^(.*?)\s+\d+:\d{2}$/);return (m?m[1]:String(l)).trim()}
 function scorers(md){
   var M={};
-  modeMatches(md).forEach(function(m){
+  modeMatches(md).filter(isOff).forEach(function(m){
     [[m.g1,m.t1,m.n1],[m.g2,m.t2,m.n2]].forEach(function(p){
       (p[0]||[]).forEach(function(l){
         if(/\(AG\)/i.test(l))return;
@@ -995,8 +1029,9 @@ function ic(n){
 }
 function vHome(){
   var dc=CFG.discord||DISCORD_URL,ms=S.matches||[],gl=0;
-  ms.forEach(function(m){gl+=(+m.s1||0)+(+m.s2||0)});
-  var pr=ms.length?(gl/ms.length).toFixed(1):"0";
+  var off=ms.filter(isOff);
+  off.forEach(function(m){gl+=(+m.s1||0)+(+m.s2||0)});
+  var pr=off.length?(gl/off.length).toFixed(1):"0";
   var st=function(n,l){return '<div><b>'+n+'</b><span>'+l+'</span></div>'};
   var h='<section class="hx"><img class="hx-wm" src="logo.png" alt=""><h1 class="hx-title">LTF</h1><span class="hx-pill">Haxball · Temporada 1</span>'+
     '<p class="hx-sub">La página oficial de LTF, acá vas a encontrar toda la información de la liga: replays, estadísticas, etc.</p>'+
@@ -1267,15 +1302,20 @@ function vH2H(){
 }
 function mcard(m){
   var a=sideTeam(m,1),b=sideTeam(m,2),mv=m.meta&&m.meta.mvp;
-  return '<a class="mcard" href="#partido-'+esc(m.id)+'" style="--c1:'+esc(a.color)+';--c2:'+esc(b.color)+'">'+
-    '<div class="ttl">'+esc(m.title||(a.name+" vs "+b.name))+'</div>'+
+  return '<a class="mcard'+(isOff(m)?"":" aj")+'" href="#partido-'+esc(m.id)+'" style="--c1:'+esc(a.color)+';--c2:'+esc(b.color)+'">'+
+    '<div class="ttl">'+(isOff(m)?"":'<span class="tag-aj">Replay de la comunidad</span> ')+esc(m.title||(a.name+" vs "+b.name))+'</div>'+
     '<div class="mrow"><div class="s">'+bigLogo(a)+'<span>'+esc(a.name)+'</span></div><div class="sc">'+m.s1+' : '+m.s2+'</div><div class="s">'+bigLogo(b)+'<span>'+esc(b.name)+'</span></div></div>'+
-    '<div class="mfoot"><span>'+esc(dateStr(m.created_at))+(m.round?" · Fecha "+esc(m.round):"")+'</span>'+(mv?'<span>★ '+esc(mv.n)+' '+(mv.r!=null?mv.r.toFixed(1):"")+'</span>':"")+'</div></a>';
+    '<div class="mfoot"><span>'+esc(dateStr(m.created_at))+(m.round?" · Fecha "+esc(m.round):"")+'</span>'+(isOff(m)?'<span class="tag-of">Oficial</span>':'<span>No suma stats</span>')+(mv?'<span>★ '+esc(mv.n)+' '+(mv.r!=null?mv.r.toFixed(1):"")+'</span>':"")+'</div></a>';
 }
 function vPartidos(){
-  var ms=modeMatches(S.mode);
-  if(!ms.length)return empty("Todavía no hay partidos en "+S.mode,"Cuando se suba el primer replay de esta modalidad, el partido aparece acá con su análisis.");
-  return '<div class="mlist">'+ms.map(mcard).join("")+'</div>';
+  var all=modeMatches(S.mode);
+  if(!all.length)return empty("Todavía no hay partidos en "+S.mode,"Cuando se suba el primer replay de esta modalidad, el partido aparece acá con su análisis.");
+  var f=S.pf||"todos",nOf=all.filter(isOff).length,nAj=all.length-nOf;
+  var ms=f==="of"?all.filter(isOff):f==="aj"?all.filter(function(m){return !isOff(m)}):all;
+  var chip=function(v,l,n){return '<button type="button" class="pfchip'+(f===v?" on":"")+'" data-act="pfilter" data-v="'+v+'">'+l+' <em>'+n+'</em></button>'};
+  return '<div class="pfbar">'+chip("todos","Todos",all.length)+chip("of","Oficiales de la liga",nOf)+chip("aj","Comunidad",nAj)+'</div>'+
+    '<p class="note" style="text-align:center;margin:0 0 14px">Los replays de la comunidad no suman a la tabla ni a los goleadores.</p>'+
+    (ms.length?'<div class="mlist">'+ms.map(mcard).join("")+'</div>':empty("No hay replays en este filtro","Probá con otro."));
 }
 function vGoleadores(){
   var r=scorers(S.mode);
@@ -2003,7 +2043,7 @@ function vSubir(){
     '<div><label for="ut">Nombre del partido</label><input id="ut" type="text" data-u="title" value="'+esc(up.title)+'"></div>'+
     '<div><label for="ur">Fecha número (opcional)</label><input id="ur" type="number" min="1" max="99" data-u="round" value="'+esc(up.round)+'"></div>'+
     (S.canWrite?'<div class="grid2"><div><label for="u1">Equipo rojo</label><select id="u1" data-u="t1">'+opts(up.t1)+'</select></div><div><label for="u2">Equipo azul</label><select id="u2" data-u="t2">'+opts(up.t2)+'</select></div></div>'+
-    '<p class="note" style="margin:0">Si elegís los dos equipos, el partido usa sus colores y escudos y suma en la tabla. Si no, queda como replay suelto.</p>':'<p class="note" style="margin:0">Se publica como replay suelto (Rojo vs Azul). Si es un partido oficial de la liga, pedile a un capitán que lo suba con su código para que sume en la tabla.</p>')+
+    '<p class="note" style="margin:0">Si elegís los dos equipos, es un partido oficial: usa sus colores y escudos y suma en la tabla y en goleadores. Si no elegís ninguno, queda como replay de la comunidad: se publica igual, pero no suma a la liga.</p>':'<p class="note" style="margin:0">Se publica como replay de la comunidad (Rojo vs Azul): no suma a la tabla ni a los goleadores. Si es un partido oficial de la liga, pedile a un capitán que lo suba con su código para que sume en la tabla.</p>')+
     (up.busy?'<div class="prog"><i></i></div>':"")+
     '<button type="button" class="primary" data-act="analyze"'+(ok?"":" disabled")+'>'+(up.busy?"Procesando…":"Procesar y publicar")+'</button>'+st+'</div>';
 }
@@ -2335,6 +2375,7 @@ $("view").addEventListener("click",function(e){
   if(act==="saveteam")saveTeam();
   if(act==="cancelteam"){S.E={id:"",name:"",color:"#2f66c9",logo:""};render()}
   if(act==="editteam"){var t=teamById(id);if(t){S.E={id:t.id,name:t.name,color:t.color||"#2f66c9",logo:t.logo||""};render();window.scrollTo(0,0)}}
+  if(act==="pfilter"){S.pf=b.dataset.v;render();return}
   if(act==="delteam"){if(S.armed!=="t"+id){S.armed="t"+id;render()}else{S.armed="";api.rpc("delete_team",{code:S.code,p_id:id}).then(function(){return loadAll(true)}).catch(fail)}}
   if(act==="delmatch"){if(S.armed!=="m"+id){S.armed="m"+id;render()}else{S.armed="";api.rpc("delete_match",{code:S.code,p_id:id}).then(function(){return loadAll(true)}).then(function(){location.hash=(S.mode||"x5")+"-partidos"}).catch(fail)}}
   if(act==="addplayer")addPlayer(id);
