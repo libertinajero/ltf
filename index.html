@@ -525,6 +525,16 @@ a.btn.ghost:hover{border-color:var(--celeste);color:var(--celeste)}
 #sphost{width:100%;height:100%}
 #spslot{border-radius:12px;background:#121212}
 #spslot .spf{margin:0;height:100%}
+
+/* ===== Botones: una sola tipografía (Outfit), distinta a la de los títulos (Syne) ===== */
+button,.btn,nav button,.tb-links a,.tb-cta,.fn-go a,.tk .go a,.trk,a.tile b,.hbtn b,.mdl-card button,.navback{font-family:var(--body);text-transform:none;letter-spacing:0}
+a.tile{border:1px solid var(--line);border-top:3px solid var(--celeste);border-radius:16px;background:linear-gradient(180deg,rgba(16,26,44,.75),rgba(8,14,26,.9));padding:16px 18px;transition:transform .18s,border-color .18s,box-shadow .18s}
+a.tile:hover{transform:translateY(-3px);border-color:rgba(116,172,223,.55);box-shadow:0 14px 28px -18px rgba(116,172,223,.6)}
+a.tile b{font-weight:600;font-size:17px;line-height:1.2}
+.hbtn b{font-weight:700;font-size:20px}
+.tk .go a,.fn-go a{font-weight:600}
+.spwarn{margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(116,172,223,.4);background:rgba(116,172,223,.1);color:var(--chalk);font-size:13px;line-height:1.5}
+.spwarn b{display:block;color:#fff;margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -1042,6 +1052,7 @@ function vMusica(){
     (SPMSG?'<p class="status bad" role="status">'+esc(SPMSG)+'</p>':"");
   if(sp){
     h+='<div id="spslot" style="height:'+(sp.t==="track"||sp.t==="episode"?152:380)+'px;margin-top:14px"></div>'+
+      '<div class="spwarn"><b>¿No suena completo o se corta a los 30 segundos?</b> Desactivá el bloqueo de cookies de terceros para esta página y recargala. En Brave: tocá el ícono del león en la barra de direcciones y apagá los Escudos para este sitio. En Chrome: tocá el ícono a la izquierda de la dirección, entrá a Configuración del sitio y permití las cookies de terceros. Además tenés que tener la sesión iniciada en open.spotify.com en el mismo navegador.</div>'+
       '<div class="cta" style="justify-content:flex-start;margin-top:12px"><a class="btn spbtn" href="https://open.spotify.com/'+sp.t+'/'+sp.id+'" target="_blank" rel="noopener">'+IC.sp+'Abrir en Spotify</a></div>'+
       '<p class="note">La música de fondo queda desactivada mientras uses Spotify. '+(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)?'En el celu el reproductor de acá suele quedarse en fragmentos de 30 segundos aunque tengas la sesión iniciada, porque el navegador bloquea la sesión de Spotify dentro de otras páginas. Tocá “Abrir en Spotify” y la escuchás completa en la app.':'Si no tenés la sesión iniciada en Spotify en este navegador, solo vas a escuchar fragmentos de 30 segundos. Iniciá sesión en open.spotify.com y recargá, o usá “Abrir en Spotify”.')+' Mientras tengas tu playlist cargada, el reproductor flotante controla Spotify (play y barra de tiempo); para cambiar de tema usá el reproductor de Spotify de esta página. Para volver a la música de la liga, tocá “Quitar mi playlist”.</p>'+
       (mine?'<div class="cta" style="justify-content:flex-start"><button type="button" class="danger" data-sp="clear">Quitar mi playlist</button></div>':"");
@@ -2145,9 +2156,28 @@ function authInit(){
     return fetch(CFG.url+"/auth/v1/user",{headers:{apikey:CFG.key,Authorization:"Bearer "+s2.at}}).then(function(r){if(!r.ok)throw r.status;return r.json()}).then(function(u){
       var m=u.user_metadata||{};
       S.user={id:u.id,name:(m.custom_claims&&m.custom_claims.global_name)||m.full_name||m.name||m.user_name||m.preferred_username||String(u.email||"").split("@")[0]||"usuario",avatar:m.avatar_url||m.picture||""};
-      render();
+      render();discordRole(s2.at);
     });
   }).catch(function(e){if(e===401||e===403){authStore(null);S.user=null;render()}});
+}
+/* Si tu usuario de Discord tiene el rol de admin o de capitán en el servidor, entra solo con ese rol (lo verifica la función discord-role de Supabase) */
+function discordRole(at){
+  if(!CFG.url)return;
+  var via="";try{via=localStorage.getItem("ltf-via")||""}catch(e){}
+  fetch(CFG.url+"/functions/v1/discord-role",{method:"POST",headers:{apikey:CFG.key,Authorization:"Bearer "+at,"Content-Type":"application/json"},body:"{}"})
+    .then(function(r){return r.ok?r.json():null})
+    .then(function(j){
+      if(!j)return; /* si la función no responde, no se toca nada */
+      if(j.role&&j.code){
+        if(S.role&&via!=="discord")return; /* entró a mano con un código: no se le cambia el rol */
+        if(S.role===j.role&&S.code===j.code)return;
+        S.revoked=false;S.code=j.code;setRole(j.role);
+        try{localStorage.setItem("ltf-code",j.code);localStorage.setItem("ltf-via","discord")}catch(e){}
+        render();
+      }else if(via==="discord"){ /* ya no tiene el rol en Discord: se le saca el acceso */
+        S.revoked=true;logout();
+      }
+    }).catch(function(){});
 }
 function discordLogin(){
   if(!CFG.url){S.authMsg="Falta configurar la conexión (config.js).";render();return}
@@ -2185,10 +2215,10 @@ function enterCode(){
   var el=$("code"),c=el?el.value.trim():"";if(!c)return;
   checkCode(c).then(function(r){
     if(!r){S.codeMsg="Ese código no es válido.";S.codeBad=true;render();return}
-    S.code=c;setRole(r);S.codeMsg="";S.codeBad=false;try{localStorage.setItem("ltf-code",c)}catch(e){}render();
+    S.code=c;setRole(r);S.codeMsg="";S.codeBad=false;try{localStorage.setItem("ltf-code",c);localStorage.removeItem("ltf-via")}catch(e){}render();
   }).catch(function(err){S.codeMsg="No se pudo verificar el código ("+((err&&err.message)||"error")+").";S.codeBad=true;render()});
 }
-function logout(){S.code="";setRole("");try{localStorage.removeItem("ltf-code")}catch(e){}if(S.tab==="equipos")location.hash="liga";render()}
+function logout(){S.code="";setRole("");try{localStorage.removeItem("ltf-code");localStorage.removeItem("ltf-via")}catch(e){}if(S.tab==="equipos")location.hash="liga";render()}
 function shrink(file,cb){
   var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){
     var s=Math.min(1,160/Math.max(im.width,im.height)),c=document.createElement("canvas");
@@ -2571,7 +2601,7 @@ loadAll(true);
 authInit();
 setInterval(function(){loadAll(false)},60000);
 var saved="";try{saved=localStorage.getItem("ltf-code")||""}catch(e){}
-if(saved)checkCode(saved).then(function(r){if(r){S.code=saved;setRole(r);render()}else{try{localStorage.removeItem("ltf-code")}catch(e){}}}).catch(function(){});
+if(saved)checkCode(saved).then(function(r){if(r&&!S.revoked){S.code=saved;setRole(r);render()}else{try{localStorage.removeItem("ltf-code")}catch(e){}}}).catch(function(){});
 })();
 </script>
 </body>
