@@ -1785,7 +1785,7 @@ function saveUpload(){
   var withReplay=up.buf&&up.buf.byteLength<=2000000;
   if(withReplay)payload.replay=b64enc(up.buf);
   (pub?api.rpc("add_match_open",{p:payload}):api.rpc("add_match",{code:S.code,p:payload})).then(function(id){
-    S.up=blankUp();S.banner="saved";
+    postCard(Object.assign({},M,{id:id,title:title}),id);S.up=blankUp();S.banner="saved";
     return loadAll(true).then(function(){location.hash="partido-"+id});
   }).catch(function(err){
     up.busy=false;up.bad=true;
@@ -1905,12 +1905,10 @@ function saveTeam(){
 }
 function loadImg(src){return new Promise(function(ok){if(!src)return ok(null);var i=new Image();i.crossOrigin="anonymous";i.onload=function(){ok(i)};i.onerror=function(){ok(null)};i.src=src})}
 /* Tarjeta del resultado como imagen (1200x630): se copia al portapapeles para pegarla en Discord, o se descarga */
-function shareCard(btn){
-  var M=S.cur;if(!M||!M.A||M.A.v!==2||btn.disabled)return;
-  var A=M.A,a=sideTeam(M,1),b=sideTeam(M,2),old=btn.textContent,FF="'Barlow Condensed','Arial Narrow',Arial,sans-serif";
-  btn.disabled=true;btn.textContent="Armando imagen…";
-  var fin=function(msg){btn.textContent=msg;setTimeout(function(){btn.textContent=old;btn.disabled=false},2400)};
-  Promise.all([loadImg(a.logo),loadImg(b.logo),(document.fonts&&document.fonts.load)?document.fonts.load("700 40px 'Barlow Condensed'").catch(function(){}):0]).then(function(r){
+/* Dibuja la tarjeta 1200x630 y devuelve el PNG (se usa para compartir y para el aviso de Discord) */
+function cardBlob(M){
+  var A=M.A,a=sideTeam(M,1),b=sideTeam(M,2),FF="'Barlow Condensed','Arial Narrow',Arial,sans-serif";
+  return Promise.all([loadImg(a.logo),loadImg(b.logo),(document.fonts&&document.fonts.load)?document.fonts.load("700 40px 'Barlow Condensed'").catch(function(){}):0]).then(function(r){
     var W=1200,H=630,c=document.createElement("canvas");c.width=W;c.height=H;
     var g=c.getContext("2d");
     var T=function(s,x,y,size,col,al,w,mw){g.font=(w||700)+" "+size+"px "+FF;g.fillStyle=col;g.textAlign=al||"center";g.textBaseline="middle";if(mw)g.fillText(String(s),x,y,mw);else g.fillText(String(s),x,y)};
@@ -1944,11 +1942,30 @@ function shareCard(btn){
     };
     [[1,200],[2,W-200]].forEach(function(x){lines(x[0]).forEach(function(s,i){T(s,x[1],440+i*27,22,"#c9d4e2","center",600,360)})});
     T(LEAGUE,36,604,22,"#8a96a6","left");T(dateStr(M.created_at),W-36,604,22,"#8a96a6","right");
-    c.toBlob(function(blob){
-      if(!blob){fin("No se pudo armar");return}
-      var dl=function(){var u=URL.createObjectURL(blob),l=document.createElement("a");l.href=u;l.download="ltf-"+(M.id||"partido")+".png";document.body.appendChild(l);l.click();l.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);fin("Imagen descargada")};
-      if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({"image/png":blob})]).then(function(){fin("¡Copiada! Pegala en Discord")},dl)}else dl();
-    },"image/png");
+    return new Promise(function(ok){c.toBlob(function(x){ok(x)},"image/png")});
+  });
+}
+/* Sube la tarjeta y avisa a Supabase: ahí se dispara el mensaje a Discord (si falla la imagen, sale igual sin ella) */
+function postCard(M,id){
+  var done=function(url){return api.rpc("set_match_card",{p_id:id,p_url:url||""}).catch(function(){})};
+  if(!M||!M.A)return done("");
+  cardBlob(M).then(function(blob){
+    if(!blob)throw new Error("sin imagen");
+    var h={apikey:CFG.key,"Content-Type":"image/png"};if(/^eyJ/.test(CFG.key))h.Authorization="Bearer "+CFG.key;
+    return fetch(CFG.url+"/storage/v1/object/cards/"+id+".png",{method:"POST",headers:h,body:blob}).then(function(r){
+      if(!r.ok)throw new Error("subida");return CFG.url+"/storage/v1/object/public/cards/"+id+".png";
+    });
+  }).then(done,function(){return done("")});
+}
+function shareCard(btn){
+  var M=S.cur;if(!M||!M.A||M.A.v!==2||btn.disabled)return;
+  var old=btn.textContent;
+  btn.disabled=true;btn.textContent="Armando imagen…";
+  var fin=function(msg){btn.textContent=msg;setTimeout(function(){btn.textContent=old;btn.disabled=false},2400)};
+  cardBlob(M).then(function(blob){
+    if(!blob){fin("No se pudo armar");return}
+    var dl=function(){var u=URL.createObjectURL(blob),l=document.createElement("a");l.href=u;l.download="ltf-"+(M.id||"partido")+".png";document.body.appendChild(l);l.click();l.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);fin("Imagen descargada")};
+    if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({"image/png":blob})]).then(function(){fin("¡Copiada! Pegala en Discord")},dl)}else dl();
   }).catch(function(){fin("No se pudo armar")});
 }
 function copyLink(btn){
