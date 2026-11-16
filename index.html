@@ -1946,16 +1946,29 @@ function cardBlob(M){
   });
 }
 /* Sube la tarjeta y avisa a Supabase: ahí se dispara el mensaje a Discord (si falla la imagen, sale igual sin ella) */
+function cardToast(msg,bad){
+  try{
+    var t=document.createElement("div");t.setAttribute("role","status");
+    t.style.cssText="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;max-width:min(520px,calc(100vw - 24px));padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.35;background:#0a121d;color:#eef2f7;border:1px solid "+(bad?"#d8483b":"#5fd18a");
+    t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},bad?20000:5000);
+  }catch(e){}
+}
 function postCard(M,id){
-  var done=function(url){return api.rpc("set_match_card",{p_id:id,p_url:url||""}).catch(function(){})};
-  if(!M||!M.A)return done("");
+  var shown=S.canWrite;
+  var done=function(url,why){
+    return api.rpc("set_match_card",{p_id:id,p_url:url||""}).then(function(){
+      if(shown)cardToast(url?"Discord: tarjeta subida, el aviso sale en unos segundos.":"Discord: el aviso sale sin imagen ("+why+").",!url);
+    }).catch(function(e){if(shown)cardToast("Discord: no se pudo avisar ("+((e&&e.message)||"error")+"). ¿Corriste migracion_novedades.sql?",true)});
+  };
+  if(!M||!M.A)return done("","sin estadísticas");
   cardBlob(M).then(function(blob){
-    if(!blob)throw new Error("sin imagen");
-    var h={apikey:CFG.key,"Content-Type":"image/png"};if(/^eyJ/.test(CFG.key))h.Authorization="Bearer "+CFG.key;
+    if(!blob)throw new Error("no se pudo dibujar la tarjeta");
+    var h={apikey:CFG.key,"Content-Type":"image/png"};h.Authorization="Bearer "+CFG.key;
     return fetch(CFG.url+"/storage/v1/object/cards/"+id+".png",{method:"POST",headers:h,body:blob}).then(function(r){
-      if(!r.ok)throw new Error("subida");return CFG.url+"/storage/v1/object/public/cards/"+id+".png";
+      if(r.ok)return CFG.url+"/storage/v1/object/public/cards/"+id+".png";
+      return r.text().then(function(t){var m="";try{m=JSON.parse(t).message||""}catch(e){}throw new Error("la subida falló: "+(m||("HTTP "+r.status)))});
     });
-  }).then(done,function(){return done("")});
+  }).then(function(u){return done(u)},function(e){return done("",(e&&e.message)||"error")});
 }
 function shareCard(btn){
   var M=S.cur;if(!M||!M.A||M.A.v!==2||btn.disabled)return;
