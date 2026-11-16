@@ -356,6 +356,32 @@ canvas#sc{cursor:pointer}
 .bracket{display:flex;gap:14px;overflow-x:auto;align-items:stretch}
 .bcol{flex:1;min-width:270px;display:flex;flex-direction:column;justify-content:space-around;gap:8px}
 .bcol .fx{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--row)}
+/* portada */
+.hero3{position:relative;display:grid;grid-template-columns:1.35fr .65fr;align-items:center;gap:16px;padding:30px 26px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:repeating-linear-gradient(-58deg,rgba(116,172,223,.09) 0 38px,transparent 38px 76px),linear-gradient(115deg,#0e1c33,#0a111d 62%)}
+.hero3 .kick{font-family:var(--display);font-weight:600;letter-spacing:.34em;font-size:14px;color:var(--sun);text-transform:uppercase}
+.hero3 .mega{font-family:var(--display);font-weight:700;font-size:clamp(88px,19vw,176px);line-height:.8;margin:10px 0 0;text-transform:uppercase;letter-spacing:-.01em}
+.hero3 .flagline{height:14px;width:min(320px,70%);margin:12px 0 14px;border-radius:2px;background:linear-gradient(#74acdf 0 34%,#fff 34% 66%,#74acdf 66%)}
+.hero3 p{margin:0 0 16px;max-width:430px;color:var(--chalk)}
+.hero3 .cta{justify-content:flex-start}
+.hero3 .hlogo{justify-self:center;width:min(230px,100%);filter:drop-shadow(0 0 40px rgba(116,172,223,.45))}
+.board{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-top:3px solid var(--sun);border-radius:12px;background:#070c15}
+.board>div{padding:12px 8px;text-align:center;border-right:1px dashed var(--line)}
+.board>div:last-child{border-right:0}
+.board b{display:block;font-family:var(--display);font-size:clamp(32px,7vw,54px);line-height:1;color:var(--sun);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.board span{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.duo{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;align-items:start}
+.pr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.pr:last-of-type{border-bottom:0}
+.pr .n{font-family:var(--display);font-weight:700;font-size:24px;width:24px;color:var(--celeste)}
+.pr:first-of-type .n{color:var(--sun)}
+.pr .nm{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
+.pr .pt{font-family:var(--display);font-weight:700;font-size:22px}
+.pod h3{font-family:var(--display);font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:10px 0 0;font-weight:600}
+.pod h3:first-child{margin-top:0}
+.gol{margin-top:12px;padding:12px;border-radius:10px;border:1px solid rgba(246,180,14,.4);background:linear-gradient(100deg,rgba(246,180,14,.14),transparent)}
+.gol small{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--sun)}
+.gol b{font-family:var(--display);font-size:24px;text-transform:uppercase}
+@media (max-width:760px){.hero3{grid-template-columns:1fr;padding:22px 18px}.hero3 .hlogo{grid-row:1;width:110px;justify-self:start}.duo{grid-template-columns:1fr}.board{grid-template-columns:repeat(2,1fr)}.board>div:nth-child(2){border-right:0}.board>div:nth-child(-n+2){border-bottom:1px dashed var(--line)}}
 </style>
 </head>
 <body>
@@ -807,14 +833,33 @@ function b64dec(str){var s=atob(str),u=new Uint8Array(s.length),i;for(i=0;i<s.le
    Vistas de la liga
    ===================================================================== */
 function vHome(){
-  var dc=CFG.discord||DISCORD_URL;
-  return '<section class="home"><img class="hlogo" src="logo.png" alt="Logo de la LTF"><span class="pill2">Temporada 1</span><h1 class="big">Bienvenido a la <span>LTF</span></h1><p class="sub">La liga de HaxBall: tabla, replays con análisis, goleadores y plantillas de cada equipo. Elegí a dónde querés ir.</p></section>'+avisosHTML()+
-    '<div class="hgrid">'+
+  var dc=CFG.discord||DISCORD_URL,ms=S.matches||[],gl=0;
+  ms.forEach(function(m){gl+=(+m.s1||0)+(+m.s2||0)});
+  var pr=ms.length?(gl/ms.length).toFixed(1):"0";
+  var h='<section class="hero3"><div><div class="kick">Haxball · Temporada 1</div><h1 class="mega">LTF</h1><div class="flagline"></div>'+
+    '<p>La liga donde cada partido queda guardado: replay, estadísticas y figura. Subí el tuyo.</p>'+
+    '<div class="cta"><a class="btn primary" href="#liga">Entrar a la liga</a>'+(dc?'<a class="btn ghost" href="'+esc(dc)+'" target="_blank" rel="noopener">Discord</a>':"")+'</div></div>'+
+    '<img class="hlogo" src="logo.png" alt="Logo de la LTF"></section>'+
+    '<div class="board" aria-label="Marcador de la temporada"><div><b>'+ms.length+'</b><span>Replays</span></div><div><b>'+gl+'</b><span>Goles</span></div><div><b>'+(S.teams||[]).length+'</b><span>Equipos</span></div><div><b>'+pr+'</b><span>Goles x partido</span></div></div>'+avisosHTML();
+  if(ms.length){
+    var pod="",best=null;
+    MODES.forEach(function(md){
+      var rows=standings(md).filter(function(r){return r.pj>0}).slice(0,3);
+      if(!rows.length)return;
+      pod+='<h3>Liga '+md+'</h3>'+rows.map(function(r,i){return '<div class="pr"><span class="n">'+(i+1)+'</span>'+mini(r.t)+'<span class="nm">'+tlink(r.t)+'</span><span class="pt">'+r.pts+' pts</span></div>'}).join("");
+      var g=scorers(md)[0];if(g&&(!best||g.n>best.n))best=g;
+    });
+    h+='<div class="duo"><div><h2>Último partido</h2><div class="mlist">'+mcard(ms[0])+'</div></div>'+
+      '<div class="panel pod"><h2>Podio</h2>'+(pod||'<p class="note" style="margin:0">Cuando haya partidos entre equipos de la liga, acá aparece el podio.</p>')+
+      (best?'<div class="gol"><small>Goleador</small><b>'+esc(best.name)+'</b> <span class="note" style="margin:0">'+best.n+(best.n===1?" gol":" goles")+(best.tn?" · "+esc(best.tn):"")+'</span></div>':"")+'</div></div>';
+  }
+  h+='<div class="hgrid">'+
     '<a class="hbtn" href="#liga"><span class="hi">🏆</span><b>Liga</b><small>Tabla, replays, goleadores y plantillas · x5 y x7</small></a>'+
     '<a class="hbtn soon" href="#host3"><span class="hi">🎮</span><b>Host x3</b><small>Estadísticas del host x3</small><em>Próximamente</em></a>'+
     (dc?'<a class="hbtn" href="'+esc(dc)+'" target="_blank" rel="noopener"><span class="hi">💬</span><b>Discord</b><small>Sumate a la comunidad</small></a>'
        :'<div class="hbtn soon"><span class="hi">💬</span><b>Discord</b><small>Sumate a la comunidad</small><em>Próximamente</em></div>')+
     '</div>';
+  return h;
 }
 function vLiga(){
   var h='<section class="landing"><span class="pill2">Liga</span><h1 class="big">Elegí la <span>modalidad</span></h1><p class="sub">Cada modalidad tiene su propia tabla, replays, goleadores y plantillas.</p></section><div class="hgrid two">';
@@ -1785,7 +1830,7 @@ function saveUpload(){
   var withReplay=up.buf&&up.buf.byteLength<=2000000;
   if(withReplay)payload.replay=b64enc(up.buf);
   (pub?api.rpc("add_match_open",{p:payload}):api.rpc("add_match",{code:S.code,p:payload})).then(function(id){
-    postCard(Object.assign({},M,{id:id,title:title}),id);S.up=blankUp();S.banner="saved";
+    postCard(Object.assign({},M,{id:id,title:title}),id);if(up.file)api.rpc("link_match_roster",{p_match:id,p_file:up.file}).catch(function(){});S.up=blankUp();S.banner="saved";
     return loadAll(true).then(function(){location.hash="partido-"+id});
   }).catch(function(err){
     up.busy=false;up.bad=true;
