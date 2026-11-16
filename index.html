@@ -357,7 +357,7 @@ canvas#sc{cursor:pointer}
 .bcol{flex:1;min-width:270px;display:flex;flex-direction:column;justify-content:space-around;gap:8px}
 .bcol .fx{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--row)}
 /* portada */
-.hero3{position:relative;display:grid;grid-template-columns:1.35fr .65fr;align-items:center;gap:16px;padding:30px 26px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:repeating-linear-gradient(-58deg,rgba(116,172,223,.09) 0 38px,transparent 38px 76px),linear-gradient(115deg,#0e1c33,#0a111d 62%)}
+.hero3{position:relative;display:grid;grid-template-columns:1.35fr .65fr;align-items:center;gap:16px;padding:30px 26px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 300' preserveAspectRatio='xMidYMid slice'%3E%3Cg fill='none' stroke='rgba(255,255,255,.13)' stroke-width='2.5'%3E%3Crect x='24' y='24' width='852' height='252' rx='6'/%3E%3Cpath d='M450 24V276'/%3E%3Ccircle cx='450' cy='150' r='52'/%3E%3Crect x='24' y='88' width='96' height='124'/%3E%3Crect x='780' y='88' width='96' height='124'/%3E%3Crect x='24' y='122' width='34' height='56'/%3E%3Crect x='842' y='122' width='34' height='56'/%3E%3Cpath d='M120 124A34 34 0 0 1 120 176M780 124A34 34 0 0 0 780 176'/%3E%3C/g%3E%3Ccircle cx='450' cy='150' r='5' fill='rgba(255,255,255,.18)'/%3E%3C/svg%3E") center/cover no-repeat,linear-gradient(115deg,rgba(14,28,51,.88),rgba(10,17,29,.93) 62%),url("portada.jpg") center/cover no-repeat,#0a111d}
 .hero3 .kick{font-family:var(--display);font-weight:600;letter-spacing:.34em;font-size:14px;color:var(--sun);text-transform:uppercase}
 .hero3 .mega{font-family:var(--display);font-weight:700;font-size:clamp(88px,19vw,176px);line-height:.8;margin:10px 0 0;text-transform:uppercase;letter-spacing:-.01em}
 .hero3 .flagline{height:14px;width:min(320px,70%);margin:12px 0 14px;border-radius:2px;background:linear-gradient(#74acdf 0 34%,#fff 34% 66%,#74acdf 66%)}
@@ -381,6 +381,17 @@ canvas#sc{cursor:pointer}
 .gol{margin-top:12px;padding:12px;border-radius:10px;border:1px solid rgba(246,180,14,.4);background:linear-gradient(100deg,rgba(246,180,14,.14),transparent)}
 .gol small{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--sun)}
 .gol b{font-family:var(--display);font-size:24px;text-transform:uppercase}
+.tix{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}
+.tk{position:relative;display:grid;grid-template-columns:62px 1fr;border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#101a2c,#0b1220);overflow:hidden}
+.tk .stub{display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:32px;color:#06101c;background:var(--celeste);border-right:2px dashed rgba(6,16,28,.45)}
+.tk:before,.tk:after{content:"";position:absolute;left:51px;width:22px;height:22px;border-radius:50%;background:var(--bg);border:1px solid var(--line);z-index:1}
+.tk:before{top:-12px}.tk:after{bottom:-12px}
+.tk .bd{padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.tk b{font-family:var(--display);font-size:22px;letter-spacing:.05em;text-transform:uppercase;line-height:1}
+.tk small{color:var(--muted);font-size:13px}
+.tk .go{display:flex;gap:6px;margin-top:4px}
+.tk .go a{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:2px 12px;background:var(--row)}
+.tk .go a:hover{border-color:var(--celeste);color:var(--celeste)}
 @media (max-width:760px){.hero3{grid-template-columns:1fr;padding:22px 18px}.hero3 .hlogo{grid-row:1;width:110px;justify-self:start}.duo{grid-template-columns:1fr}.board{grid-template-columns:repeat(2,1fr)}.board>div:nth-child(2){border-right:0}.board>div:nth-child(-n+2){border-bottom:1px dashed var(--line)}}
 </style>
 </head>
@@ -837,8 +848,8 @@ function vHome(){
   ms.forEach(function(m){gl+=(+m.s1||0)+(+m.s2||0)});
   var pr=ms.length?(gl/ms.length).toFixed(1):"0";
   var h='<section class="hero3"><div><div class="kick">Haxball · Temporada 1</div><h1 class="mega">LTF</h1><div class="flagline"></div>'+
-    '<p>La liga donde cada partido queda guardado: replay, estadísticas y figura. Subí el tuyo.</p>'+
-    '<div class="cta"><a class="btn primary" href="#liga">Entrar a la liga</a>'+(dc?'<a class="btn ghost" href="'+esc(dc)+'" target="_blank" rel="noopener">Discord</a>':"")+'</div></div>'+
+    '<p>La página oficial de LTF, acá vas a encontrar toda la información de la liga: replays, estadísticas, etc.</p>'+
+    '<div class="cta"><a class="btn primary" href="#liga">Ver Liga</a>'+(dc?'<a class="btn ghost" href="'+esc(dc)+'" target="_blank" rel="noopener">Discord</a>':"")+'</div></div>'+
     '<img class="hlogo" src="logo.png" alt="Logo de la LTF"></section>'+
     '<div class="board" aria-label="Marcador de la temporada"><div><b>'+ms.length+'</b><span>Replays</span></div><div><b>'+gl+'</b><span>Goles</span></div><div><b>'+(S.teams||[]).length+'</b><span>Equipos</span></div><div><b>'+pr+'</b><span>Goles x partido</span></div></div>'+avisosHTML();
   if(ms.length){
@@ -859,6 +870,11 @@ function vHome(){
     (dc?'<a class="hbtn" href="'+esc(dc)+'" target="_blank" rel="noopener"><span class="hi">💬</span><b>Discord</b><small>Sumate a la comunidad</small></a>'
        :'<div class="hbtn soon"><span class="hi">💬</span><b>Discord</b><small>Sumate a la comunidad</small><em>Próximamente</em></div>')+
     '</div>';
+  var T=[["Replays","Cada partido, jugada por jugada","partidos"],["Tabla","Posiciones y últimos 5 partidos","tabla"],["Fixture","Fechas, resultados y playoffs","fixture"],
+    ["Goleadores","Quién la mete más","goleadores"],["Plantillas","Los jugadores de cada equipo","plantillas"],["Cara a cara","Dos equipos, un historial","h2h"]];
+  h+='<h2 style="text-align:center;margin-top:8px">Explorá la liga</h2><div class="tix">'+T.map(function(t,i){
+    return '<div class="tk"><div class="stub">'+(i+1<10?"0":"")+(i+1)+'</div><div class="bd"><b>'+t[0]+'</b><small>'+t[1]+'</small><div class="go"><a href="#x5-'+t[2]+'">x5</a><a href="#x7-'+t[2]+'">x7</a></div></div></div>';
+  }).join("")+'</div>';
   return h;
 }
 function vLiga(){
