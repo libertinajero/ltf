@@ -25,7 +25,7 @@ body{background:radial-gradient(900px 420px at 50% -120px,rgba(116,172,223,.16),
   padding-block:0 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .flagbar{height:12px;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px))) 0;position:relative;
   background:linear-gradient(180deg,#74acdf 0 33.3%,#ffffff 33.3% 66.6%,#74acdf 66.6% 100%)}
-.flagbar::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;transform:translate(-50%,-50%);border-radius:50%;background:#2b6cb8;box-shadow:0 0 0 2px #fff,0 0 14px 3px rgba(116,172,223,.7)}
+.flagbar::after{display:none}
 .wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:18px;padding-top:20px}
 .stack{display:flex;flex-direction:column;gap:16px}
 .brand{display:flex;align-items:center;gap:14px;background:linear-gradient(100deg,#0a1320,#0d1118 60%);border:1px solid var(--line);border-bottom:2px solid var(--celeste);border-radius:12px;padding:12px 16px;color:var(--ink)}
@@ -2429,6 +2429,10 @@ function muTime(){
 function muSync(){
   var E=MU.el,a=MU.a;if(!E.w||!a)return;
   var hid=MU.bad&&!spGet();E.w.hidden=hid;document.body.classList.toggle("nomu",hid);
+  /* al entrar a la pestaña Música con una playlist de Spotify, se pausa la música de fondo (una sola vez, así después se puede volver a activar a mano) */
+  var onSp=!!spGet()&&/^#?musica/.test(location.hash||"");
+  if(onSp&&!MU.wasSp){MU.on=false;if(!a.paused)a.pause()}
+  MU.wasSp=onSp;
   var want=MU.on&&!MU.bad;
   if(want){if(a.paused){var p=a.play();if(p&&p.catch)p.catch(function(){})}}
   else if(!a.paused)a.pause();
