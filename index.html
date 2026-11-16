@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#05070b">
-<title>LTF Replays</title>
+<title>LTF Temporada 1</title>
 <link rel="icon" href="logo.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
 <style>
@@ -260,27 +260,35 @@ a.hbtn:hover,a.hbtn:focus-visible{transform:translateY(-5px);border-color:var(--
 .prow .est{font-size:13px;font-weight:600;white-space:nowrap}
 .est.ok{color:#5fd18a}.est.no{color:var(--warn)}
 .addp{margin-top:10px;align-items:center}
-.mu{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
-.mu[hidden],.musp[hidden]{display:none}
+.mu{position:fixed;left:12px;top:12px;z-index:40;width:232px}
+.mu[hidden]{display:none}
 .mu button{font:inherit;color:var(--ink);cursor:pointer;min-width:0}
-.mu .mus{width:46px;height:46px;padding:0;border-radius:50%;display:grid;place-items:center;font-size:19px;line-height:1;background:rgba(10,18,29,.94);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.4)}
-.mu .mus.play{border-color:var(--celeste);animation:mpulse 2.4s ease-in-out infinite}
-@keyframes mpulse{0%,100%{box-shadow:0 4px 14px rgba(0,0,0,.4),0 0 0 0 rgba(120,170,230,.45)}50%{box-shadow:0 4px 14px rgba(0,0,0,.4),0 0 0 8px rgba(120,170,230,0)}}
-.musp{width:min(300px,calc(100vw - 28px));background:rgba(10,18,29,.96);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.55);backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:8px}
-.musp .mhead{display:flex;align-items:center;gap:10px}
-.musp .mcov{width:46px;height:46px;border-radius:8px;object-fit:cover;background:#05070b;flex:none}
-.musp .minfo{flex:1;min-width:0;display:flex;flex-direction:column}
-.musp .minfo b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.musp .minfo span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.musp button{background:none;border:0;padding:6px;font-size:18px;border-radius:8px;line-height:1}
+.musp{background:rgba(10,18,29,.94);border:1px solid var(--line);border-bottom:2px solid var(--celeste);border-radius:12px;padding:9px 10px;box-shadow:0 6px 20px rgba(0,0,0,.45);backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:5px}
+.musp .mhead{display:flex;align-items:center;gap:9px}
+.musp .mcov{width:34px;height:34px;border-radius:6px;object-fit:contain;background:#05070b;flex:none}
+.musp .minfo{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
+.musp .minfo b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.musp .minfo span{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.musp button{background:none;border:0;padding:5px;font-size:15px;border-radius:8px;line-height:1}
 .musp button:hover{background:rgba(255,255,255,.08)}
-.musp button.on{color:var(--celeste)}
-.musp .big{background:var(--celeste);color:#06101c;width:42px;height:42px;border-radius:50%;padding:0;font-size:17px}
+.musp button.on{background:var(--celeste);color:#06101c}
+.musp .big{background:var(--celeste);color:#06101c;width:32px;height:32px;border-radius:50%;padding:0;font-size:13px}
 .musp .big:hover{background:var(--celeste);filter:brightness(1.1)}
-.musp input[type=range]{width:100%;margin:0;padding:0;height:18px;background:none;accent-color:var(--celeste)}
-.musp .mtime{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:-4px}
+.musp input[type=range]{width:100%;margin:0;padding:0;height:14px;background:none;accent-color:var(--celeste)}
+.musp .mtime{display:none}
 .musp .mctl{display:flex;align-items:center;justify-content:space-between}
-.musp .mvol{display:flex;align-items:center;gap:6px}
+.mvol{position:relative}
+.mvol .vpop{display:none;position:absolute;right:-4px;top:100%;padding-top:8px;z-index:2}
+.mvol .vpop>div{background:rgba(10,18,29,.98);border:1px solid var(--line);border-radius:10px;padding:8px 12px;width:150px;box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.mvol:hover .vpop,.mvol:focus-within .vpop{display:block}
+@media (max-width:1460px){
+  body{padding-top:58px}
+  .mu{left:0;right:0;top:0;width:auto}
+  .musp{border-radius:0;border-width:0 0 2px 0;flex-direction:row;align-items:center;gap:10px;padding:6px 12px}
+  .musp .mhead{flex:1;min-width:0}
+  .musp>input[data-m="pos"]{display:none}
+  .mvol .vpop{right:0}
+}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 
 .golgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);gap:16px;align-items:start}
@@ -348,7 +356,6 @@ canvas#sc{cursor:pointer}
 .bracket{display:flex;gap:14px;overflow-x:auto;align-items:stretch}
 .bcol{flex:1;min-width:270px;display:flex;flex-direction:column;justify-content:space-around;gap:8px}
 .bcol .fx{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--row)}
-.musp button.on{background:var(--celeste);color:#06101c}
 </style>
 </head>
 <body>
@@ -357,7 +364,7 @@ canvas#sc{cursor:pointer}
   <div class="brand">
     <img alt="Logo de la LTF" src="logo.png">
     <div>
-      <h1>LTF · <span>Replays</span></h1>
+      <h1>LTF <span>Haxball</span></h1>
       <p>Temporada 1</p>
     </div>
   </div>
@@ -2036,7 +2043,8 @@ var MUSIC_LIST=[
   {t:"A Keeper",a:"Drake",f:"musica/a-keeper.mp3"},
   {t:"No Idea",a:"Don Toliver",f:"musica/no-idea.mp3"},
   {t:"Passionfruit",a:"Drake",f:"musica/passionfruit.mp3"},
-  {t:"Black Beatles",a:"Rae Sremmurd",f:"musica/black-beatles.mp3"}
+  {t:"Black Beatles",a:"Rae Sremmurd",f:"musica/black-beatles.mp3"},
+  {t:"LeBron",a:"Duki",f:"musica/lebron.mp3"}
 ];
 var MU={a:null,list:[],i:0,on:true,vol:.3,shuf:false,open:false,bad:false,fails:0,el:{},drag:false,q:[],hist:[]};
 function mmss(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+("0"+t%60).slice(-2)}
@@ -2044,13 +2052,12 @@ function muLS(k,v){try{if(v===undefined)return localStorage.getItem(k);localStor
 function muList(){
   var m=CFG.music,l=Array.isArray(m)?m:(typeof m==="string"?[m]:MUSIC_LIST);
   return l.map(function(x){return typeof x==="string"?{f:x}:x}).filter(function(x){return x&&x.f}).map(function(x){
-    return {f:x.f,t:x.t||String(x.f).replace(/^.*\//,"").replace(/\.[a-z0-9]+$/i,"").replace(/[_-]+/g," "),a:x.a||"LTF Replays"};
+    return {f:x.f,t:x.t||String(x.f).replace(/^.*\//,"").replace(/\.[a-z0-9]+$/i,"").replace(/[_-]+/g," "),a:x.a||"LTF"};
   });
 }
 function muUI(){
   var E=MU.el,a=MU.a;if(!E.w||!a)return;
   var pl=!a.paused,tr=MU.list[MU.i]||{};
-  E.btn.classList.toggle("play",pl);E.btn.title="Reproductor de música";
   E.pp.textContent=pl?"⏸":"▶";E.pp.title=pl?"Pausa":"Reproducir";
   E.t.textContent=tr.t||"";E.ar.textContent=tr.a||"";
   E.sh.classList.toggle("on",MU.shf);E.sh.setAttribute("aria-pressed",MU.shf?"true":"false");E.sh.title=MU.shf?"Aleatorio: activado":"Aleatorio: desactivado";E.vl.textContent=(a.muted||a.volume===0)?"🔇":"🔊";
@@ -2095,20 +2102,17 @@ function muInit(){
   var i0=0; /* siempre arranca por la primera canción de la lista */
   var a=new Audio();a.preload="auto";a.volume=MU.vol;MU.a=a;
   var w=document.createElement("div");w.className="mu";w.hidden=true;
-  w.innerHTML='<div class="musp" hidden>'+
-    '<div class="mhead"><img class="mcov" alt="" src="logo.png"><div class="minfo"><b></b><span></span></div><button type="button" data-m="x" title="Cerrar" aria-label="Cerrar">✕</button></div>'+
+  w.innerHTML='<div class="musp">'+
+    '<div class="mhead"><img class="mcov" alt="" src="logo.png"><div class="minfo"><b></b><span></span></div></div>'+
     '<input type="range" min="0" max="1000" value="0" data-m="pos" aria-label="Posición">'+
     '<div class="mtime"><span data-m="c">0:00</span><span data-m="d">0:00</span></div>'+
     '<div class="mctl"><button type="button" data-m="sh" title="Aleatorio">🔀</button><button type="button" data-m="pv" title="Anterior">⏮</button><button type="button" class="big" data-m="pp" aria-label="Reproducir o pausar">▶</button><button type="button" data-m="nx" title="Siguiente">⏭</button>'+
-    '<span class="mvol"><button type="button" data-m="vl" title="Silenciar">🔊</button></span></div>'+
-    '<input type="range" min="0" max="100" value="'+Math.round(MU.vol*100)+'" data-m="vol" aria-label="Volumen">'+
-    '</div><button type="button" class="mus" aria-label="Reproductor de música">🎵</button>';
+    '<span class="mvol"><button type="button" data-m="vl" title="Silenciar">🔊</button><span class="vpop"><div><input type="range" min="0" max="100" value="'+Math.round(MU.vol*100)+'" data-m="vol" aria-label="Volumen"></div></span></span></div>'+
+    '</div>';
   document.body.appendChild(w);
   var q=function(k){return w.querySelector('[data-m="'+k+'"]')},E=MU.el;
-  E.w=w;E.panel=w.querySelector(".musp");E.btn=w.querySelector(".mus");E.t=w.querySelector(".minfo b");E.ar=w.querySelector(".minfo span");
-  ["pos","c","d","sh","pv","pp","nx","vl","vol","x"].forEach(function(k){E[k]=q(k)});
-  E.btn.onclick=function(){MU.open=!MU.open;E.panel.hidden=!MU.open};
-  E.x.onclick=function(){MU.open=false;E.panel.hidden=true};
+  E.w=w;E.panel=w.querySelector(".musp");E.t=w.querySelector(".minfo b");E.ar=w.querySelector(".minfo span");
+  ["pos","c","d","sh","pv","pp","nx","vl","vol"].forEach(function(k){E[k]=q(k)});
   E.pp.onclick=function(){
     if(a.paused){MU.on=true;muLS("ltf-music","1");var p=a.play();if(p&&p.catch)p.catch(function(){})}
     else{MU.on=false;muLS("ltf-music","0");a.pause()}
