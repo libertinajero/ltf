@@ -625,6 +625,11 @@ a.tile b{font-weight:600;font-size:17px;line-height:1.2}
 .vg button.rec{background:#b3261e;border-color:#b3261e;color:#fff}
 
 
+
+.fxwhen{font-size:13px;color:var(--muted);padding:0 4px 8px;text-align:center}
+.fxwhen.adm{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.fxwhen.adm input{width:auto;max-width:210px;padding:6px 8px;font-size:13px}
+.fxwhen.adm button{padding:6px 12px;font-size:13px}
 </style>
 </head>
 <body>
@@ -1322,9 +1327,24 @@ function fxResult(f,md){
 function fxCard(f,md){
   var a=fxTeam(f.t1),b=fxTeam(f.t2),r=fxResult(f,md),w=r?(r.s1>r.s2?1:r.s2>r.s1?2:0):0;
   var mid=r?'<a class="fxs" href="#partido-'+esc(r.m.id)+'">'+r.s1+' : '+r.s2+'</a>':'<span class="fxs pend">vs</span>';
-  return '<div class="fx"><span class="fxt r'+(w===1?" win":"")+'"><span>'+tlink(a)+'</span>'+mini(a)+'</span>'+mid+
+  return '<div class="fxw"><div class="fx"><span class="fxt r'+(w===1?" win":"")+'"><span>'+tlink(a)+'</span>'+mini(a)+'</span>'+mid+
     '<span class="fxt'+(w===2?" win":"")+'">'+mini(b)+'<span>'+tlink(b)+'</span></span>'+
-    (S.isAdmin?'<button type="button" class="danger" data-act="delfx" data-id="'+esc(f.id)+'">'+(S.armed==="f"+f.id?"Confirmar":"✕")+'</button>':"")+'</div>';
+    (S.isAdmin?'<button type="button" class="danger" data-act="delfx" data-id="'+esc(f.id)+'">'+(S.armed==="f"+f.id?"Confirmar":"✕")+'</button>':"")+'</div>'+fxWhenRow(f)+'</div>';
+}
+function fmtShort(iso){try{return new Date(iso).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return iso}}
+function fxWhenRow(f){
+  var key="m:"+f.id;
+  if(!S.isAdmin)return f.kickoff?'<div class="fxwhen">🕒 '+esc(fmtShort(f.kickoff))+'</div>':"";
+  var val=S.FD[key]!=null?S.FD[key]:(f.kickoff?toLocalInput(f.kickoff):"");
+  return '<div class="fxwhen adm"><span>🕒</span><input type="datetime-local" data-fxd="'+esc(key)+'" value="'+esc(val)+'" aria-label="Día y hora de este partido"><button type="button" data-act="savematch" data-id="'+esc(f.id)+'">Guardar hora</button></div>';
+}
+function saveMatchDate(id){
+  var key="m:"+id,f=(S.fx||[]).filter(function(x){return String(x.id)===String(id)})[0],v=S.FD[key];
+  if(v==null)v=f&&f.kickoff?toLocalInput(f.kickoff):"";
+  S.fmsg="Guardando…";render();
+  api.rpc("set_match_date",{code:S.code,p_id:id,p_when:v?new Date(v).toISOString():null})
+    .then(function(){S.fmsg=v?"Hora del partido guardada.":"Hora del partido borrada.";delete S.FD[key];return loadAll(true)}).then(render)
+    .catch(function(e){S.fmsg="No se pudo guardar ("+((e&&e.message)||"error")+"). ¿Corriste horas.sql en Supabase?";render()});
 }
 function vFixture(){
   var md=S.mode;
@@ -1558,11 +1578,12 @@ function fmtWhen(iso){try{return new Date(iso).toLocaleString("es-AR",{weekday:"
 function toLocalInput(iso){var d=new Date(iso);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
 function fxBar(arr,md,round,stage){
   var w=fxWhen(arr),key=stage?"s:"+stage:"r:"+round,at=' data-r="'+round+'" data-s="'+esc(stage)+'"';
-  var h='<div class="stack" style="margin:0 0 10px">'+(w?'<p class="note" style="margin:0">📅 '+esc(fmtWhen(w))+'</p>':(S.isAdmin?"":""));
+  var same=arr.every(function(f){return f.kickoff&&new Date(f.kickoff).getTime()===new Date(w).getTime()});
+  var h='<div class="stack" style="margin:0 0 10px">'+(w?'<p class="note" style="margin:0">'+(same?'📅 '+esc(fmtWhen(w)):'📅 Cada partido tiene su horario')+'</p>':"");
   if(w)h+='<div><button type="button" data-act="ics"'+at+'>Agregar al calendario</button></div>';
   if(S.isAdmin){
     var val=S.FD[key]!=null?S.FD[key]:(w?toLocalInput(w):"");
-    h+='<div class="grid2"><input type="datetime-local" data-fxd="'+esc(key)+'" value="'+esc(val)+'" aria-label="Día y hora"><button type="button" data-act="savefxd"'+at+' data-k="'+esc(key)+'">Guardar día y hora</button></div>'+
+    h+='<div class="grid2"><input type="datetime-local" data-fxd="'+esc(key)+'" value="'+esc(val)+'" aria-label="Día y hora"><button type="button" data-act="savefxd"'+at+' data-k="'+esc(key)+'" title="Pone el mismo día y hora a todos los partidos de esta fecha">Misma hora para todos</button></div>'+
       '<div><button type="button" data-act="avisofx"'+at+'>Avisar el fixture en Discord</button></div>';
   }
   return h+'</div>';
@@ -1572,7 +1593,7 @@ function saveFxDate(round,stage){
   if(v==null)v=fxWhen(list)?toLocalInput(fxWhen(list)):"";
   S.fmsg="Guardando…";render();
   api.rpc("set_fixture_date",{code:S.code,p_mode:S.mode,p_round:round||null,p_stage:stage||null,p_when:v?new Date(v).toISOString():null})
-    .then(function(){S.fmsg="Día y hora guardados.";delete S.FD[key];return loadAll(true)}).then(render)
+    .then(function(){S.fmsg="Día y hora puestos en todos los partidos de la fecha.";delete S.FD[key];return loadAll(true)}).then(render)
     .catch(function(e){S.fmsg="No se pudo guardar ("+((e&&e.message)||"error")+"). ¿Corriste fechas.sql en Supabase?";render()});
 }
 function avisoFx(round,stage){
@@ -2812,7 +2833,7 @@ $("view").addEventListener("click",function(e){
   if(act==="addaviso"){var at=(S.AV.title||"").trim();if(!at){S.rmsg="Escribí un título para la novedad.";render();return}api.rpc("add_aviso",{code:S.code,p_title:at,p_body:(S.AV.body||"").trim()}).then(function(){S.AV={title:"",body:""};S.rmsg="";return loadAll(true)}).catch(failN)}
   if(act==="delaviso"){if(S.armed!=="a"+id){S.armed="a"+id;render()}else{S.armed="";api.rpc("delete_aviso",{code:S.code,p_id:id}).then(function(){return loadAll(true)}).catch(failN)}}
   if(act==="fround"){S.fr=b.dataset.v;render();return}
-  if(act==="addfx")addFx();if(act==="ics"){makeIcs(S.mode,+b.dataset.r||0,b.dataset.s||"");return}if(act==="savefxd"){saveFxDate(+b.dataset.r||0,b.dataset.s||"");return}if(act==="avisofx"){avisoFx(+b.dataset.r||0,b.dataset.s||"");return}if(act==="revotos"){S.vp=undefined;S.vmsg="";S.vbusy=false;render();return}if(act==="vote"){castVote(b.dataset.k,b.dataset.ref,b.dataset.c);return}if(act==="genliga"){genLiga(+b.dataset.r);return}if(act==="gencopa"){genCopa(+b.dataset.r);return}if(act==="advcopa"){advCopa(b.dataset.c);return}
+  if(act==="addfx")addFx();if(act==="savematch"){saveMatchDate(b.dataset.id);return}if(act==="ics"){makeIcs(S.mode,+b.dataset.r||0,b.dataset.s||"");return}if(act==="savefxd"){saveFxDate(+b.dataset.r||0,b.dataset.s||"");return}if(act==="avisofx"){avisoFx(+b.dataset.r||0,b.dataset.s||"");return}if(act==="revotos"){S.vp=undefined;S.vmsg="";S.vbusy=false;render();return}if(act==="vote"){castVote(b.dataset.k,b.dataset.ref,b.dataset.c);return}if(act==="genliga"){genLiga(+b.dataset.r);return}if(act==="gencopa"){genCopa(+b.dataset.r);return}if(act==="advcopa"){advCopa(b.dataset.c);return}
   if(act==="delfx"){if(S.armed!=="f"+id){S.armed="f"+id;render()}else{S.armed="";api.rpc("delete_fixture",{code:S.code,p_id:id}).then(function(){return loadAll(true)}).catch(failN)}}
 });
 $("view").addEventListener("input",function(e){
