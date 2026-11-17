@@ -623,6 +623,8 @@ a.tile b{font-weight:600;font-size:17px;line-height:1.2}
 .vg select{width:auto;max-width:150px;padding:6px 8px;font-size:13px;background:rgba(6,14,26,.6);border-color:rgba(116,172,223,.28)}
 .vg button b{color:var(--celeste);font-variant-numeric:tabular-nums}
 .vg button.rec{background:#b3261e;border-color:#b3261e;color:#fff}
+
+
 </style>
 </head>
 <body>
@@ -1480,14 +1482,32 @@ function vComparar(){
 }
 
 /* ---- Votaciones (hace falta sesión de Discord; un voto por persona) ---- */
-function vrpc(name,body){
-  var h=api.h(),ss=authLoad();if(ss&&ss.at)h.Authorization="Bearer "+ss.at;
-  return fetch(CFG.url+"/rest/v1/rpc/"+name,{method:"POST",headers:h,body:JSON.stringify(body)}).then(function(r){return r.text().then(function(t){var j=null;try{j=JSON.parse(t)}catch(e){}if(!r.ok)throw new Error((j&&(j.message||j.hint))||("error "+r.status));return j})});
+function vtoken(){
+  var ss=authLoad();if(!ss||!ss.at)return Promise.resolve(null);
+  if(Date.now()<ss.exp-30000)return Promise.resolve(ss.at);
+  return authRefresh(ss).then(function(n){return n&&n.at?n.at:null});
+}
+function vcall(name,body,tok){
+  var h=api.h();if(tok)h.Authorization="Bearer "+tok;
+  return fetch(CFG.url+"/rest/v1/rpc/"+name,{method:"POST",headers:h,body:JSON.stringify(body)}).then(function(r){return r.text().then(function(t){
+    var j=null;try{j=JSON.parse(t)}catch(e){}
+    if(!r.ok){var er=new Error((j&&(j.message||j.hint||j.error_description))||("error "+r.status));er.status=r.status;er.code=j&&j.code;throw er}
+    return j;
+  })});
+}
+function vrpc(name,body,anonOk){
+  return vtoken().then(function(tok){
+    return vcall(name,body,tok).catch(function(e){
+      if(anonOk&&tok&&(e.status===401||e.status===403))return vcall(name,body,null);
+      if(e.status===401||e.status===403)throw new Error("Tu sesión venció. Salí y volvé a entrar con Discord.");
+      throw e;
+    });
+  });
 }
 function loadVotos(){
   if(S.vbusy)return;S.vbusy=true;
-  Promise.all([vrpc("votos_resumen",{p_kind:"pred"}),vrpc("votos_resumen",{p_kind:"gol"})]).then(function(r){S.vp=r[0]||[];S.vg=r[1]||[];S.vbusy=false;S.vmsg="";render()})
-    .catch(function(e){S.vp=S.vp||[];S.vg=S.vg||[];S.vbusy=false;S.vmsg="No se pudieron cargar los votos ("+((e&&e.message)||"error")+"). ¿Corriste votos.sql en Supabase?";render()});
+  Promise.all([vrpc("votos_resumen",{p_kind:"pred"},true),vrpc("votos_resumen",{p_kind:"gol"},true)]).then(function(r){S.vp=r[0]||[];S.vg=r[1]||[];S.vbusy=false;S.vmsg="";render()})
+    .catch(function(e){S.vp=S.vp||[];S.vg=S.vg||[];S.vbusy=false;S.vmsg="No se pudieron cargar los votos ("+((e&&e.message)||"error")+").";render()});
 }
 function castVote(k,ref,c){
   if(!S.user){S.modal=true;S.authMsg="Entrá con Discord para votar.";render();return}
@@ -1503,7 +1523,7 @@ function vVotar(){
   if(S.vp===undefined)loadVotos();
   var h='<div class="panel"><h2>Votá</h2><p class="note" style="margin:0">'+(S.user?"Votás como "+esc(S.user.name)+". Podés cambiar tu voto cuando quieras.":"Para votar tenés que entrar con Discord (así hay un voto por persona).")+'</p>'+
     (S.user?"":'<div class="cta" style="justify-content:flex-start;margin-top:10px"><button type="button" class="dc" data-act="openlogin">'+DC_SVG+'Entrar con Discord</button></div>')+
-    (S.vmsg?'<p class="status bad" role="status">'+esc(S.vmsg)+'</p>':"")+'</div>';
+    (S.vmsg?'<p class="status bad" role="status">'+esc(S.vmsg)+'</p><div><button type="button" data-act="revotos">Reintentar</button></div>':"")+'</div>';
   /* predicción: partidos pendientes de la próxima fecha */
   var pend=(S.fx||[]).filter(function(f){return (f.mode||"x5")===md&&!f.stage&&f.round!=null&&!fxResult(f,md)});
   var nr=pend.length?Math.min.apply(null,pend.map(function(f){return +f.round})):null;
@@ -1578,6 +1598,7 @@ function makeIcs(md,round,stage){
   a.href=u;a.download="ltf-"+md+(round?"-fecha"+round:"")+".ics";document.body.appendChild(a);a.click();
   setTimeout(function(){a.remove();URL.revokeObjectURL(u)},2000);
 }
+
 function addFx(){
   var X=S.FX;
   if(!X.t1||!X.t2||X.t1===X.t2){S.rmsg="Elegí dos equipos distintos.";render();return}
@@ -2791,7 +2812,7 @@ $("view").addEventListener("click",function(e){
   if(act==="addaviso"){var at=(S.AV.title||"").trim();if(!at){S.rmsg="Escribí un título para la novedad.";render();return}api.rpc("add_aviso",{code:S.code,p_title:at,p_body:(S.AV.body||"").trim()}).then(function(){S.AV={title:"",body:""};S.rmsg="";return loadAll(true)}).catch(failN)}
   if(act==="delaviso"){if(S.armed!=="a"+id){S.armed="a"+id;render()}else{S.armed="";api.rpc("delete_aviso",{code:S.code,p_id:id}).then(function(){return loadAll(true)}).catch(failN)}}
   if(act==="fround"){S.fr=b.dataset.v;render();return}
-  if(act==="addfx")addFx();if(act==="ics"){makeIcs(S.mode,+b.dataset.r||0,b.dataset.s||"");return}if(act==="savefxd"){saveFxDate(+b.dataset.r||0,b.dataset.s||"");return}if(act==="avisofx"){avisoFx(+b.dataset.r||0,b.dataset.s||"");return}if(act==="vote"){castVote(b.dataset.k,b.dataset.ref,b.dataset.c);return}if(act==="genliga"){genLiga(+b.dataset.r);return}if(act==="gencopa"){genCopa(+b.dataset.r);return}if(act==="advcopa"){advCopa(b.dataset.c);return}
+  if(act==="addfx")addFx();if(act==="ics"){makeIcs(S.mode,+b.dataset.r||0,b.dataset.s||"");return}if(act==="savefxd"){saveFxDate(+b.dataset.r||0,b.dataset.s||"");return}if(act==="avisofx"){avisoFx(+b.dataset.r||0,b.dataset.s||"");return}if(act==="revotos"){S.vp=undefined;S.vmsg="";S.vbusy=false;render();return}if(act==="vote"){castVote(b.dataset.k,b.dataset.ref,b.dataset.c);return}if(act==="genliga"){genLiga(+b.dataset.r);return}if(act==="gencopa"){genCopa(+b.dataset.r);return}if(act==="advcopa"){advCopa(b.dataset.c);return}
   if(act==="delfx"){if(S.armed!=="f"+id){S.armed="f"+id;render()}else{S.armed="";api.rpc("delete_fixture",{code:S.code,p_id:id}).then(function(){return loadAll(true)}).catch(failN)}}
 });
 $("view").addEventListener("input",function(e){
