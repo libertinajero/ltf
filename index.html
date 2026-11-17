@@ -897,14 +897,49 @@ function analyze(buf){
       });
     }
     function mkR(a,partial){return {frames:a.frames,P:a.P,goals:a.goals,chat:partial?[]:chat,AV:AV,KIT:KIT,poss:a.poss,map:map,votes:a.votes,ticks:a.clk,kicks:a.kicks,J:partial?{}:J,adm:partial?{}:adm,MS:partial?{}:MS}}
+    /* Si entre un "partido" y otro los equipos cambian de lado (de color), el total tiene que sumar por equipo y no por color.
+       Se detecta mirando qué jugadores estaban en cada color y se espeja lo del partido que cambió. */
+    function segSwaps(){
+      var ref={},sw=[],prev=false;
+      segs.forEach(function(g,i){
+        var ids=Object.keys(g.P),same=0,diff=0;
+        ids.forEach(function(id){var o=g.P[id];if(o.s1+o.s2<60)return;var t=o.s1>=o.s2?1:2;if(ref[id]!=null){if(ref[id]===t)same++;else diff++}});
+        var sv=i===0?false:(same+diff?diff>same:prev);
+        sw.push(sv);prev=sv;
+        ids.forEach(function(id){var o=g.P[id];if(ref[id]==null&&o.s1+o.s2>=60){var t=o.s1>=o.s2?1:2;ref[id]=sv?3-t:t}});
+      });
+      return sw;
+    }
+    function normR(R,sw){
+      var starts=segs.map(function(g){return g.f0||0}),cum=[],acc=0;
+      segs.forEach(function(g){acc+=g.clk;cum.push(acc)});
+      function byF(f){var k=0;for(var i=0;i<starts.length;i++)if(starts[i]<=f)k=i;return k}
+      function byT(t){var t6=t*60;for(var i=0;i<cum.length;i++)if(t6<cum[i])return i;return cum.length-1}
+      var goals=R.goals.map(function(g){var i=g.f!=null?byF(g.f):byT(g.t);return sw[i]?Object.assign({},g,{tm:3-g.tm}):g});
+      var kicks=R.kicks.map(function(k){var i=k.f!=null?byF(k.f):byT(k.t);return sw[i]?Object.assign({},k,{tm:3-k.tm,x:-k.x}):k});
+      var poss=[0,0,0];
+      segs.forEach(function(g,i){poss[0]+=g.poss[0];if(sw[i]){poss[1]+=g.poss[2];poss[2]+=g.poss[1]}else{poss[1]+=g.poss[1];poss[2]+=g.poss[2]}});
+      var P={};
+      Object.keys(R.P).forEach(function(id){
+        var o=R.P[id],n=Object.assign({},o,{s1:0,s2:0,pts:[]});
+        segs.forEach(function(g,i){
+          var q=g.P[id];if(!q)return;
+          if(sw[i]){n.s1+=q.s2;n.s2+=q.s1;q.pts.forEach(function(v){n.pts.push([-v[0],v[1]])})}
+          else{n.s1+=q.s1;n.s2+=q.s2;q.pts.forEach(function(v){n.pts.push(v)})}
+        });
+        P[id]=n;
+      });
+      var frames=R.frames.map(function(f){var i=byT(f.t);return sw[i]?{t:f.t,b:[-f.b[0],f.b[1]],p:f.p.map(function(q){return [q[0],-q[1],q[2],3-q[3]]})}:f});
+      return Object.assign({},R,{goals:goals,kicks:kicks,poss:poss,P:P,frames:frames});
+    }
     function finish(partial){
       clearTimeout(timer);try{reader.destroy()}catch(e){}
       try{
-        closeIv(fno());var an=buildAnalysis(mkR(ALL,false));an.iv=ALL.iv.filter(function(v){return v[1]!=null});var good=segs.filter(function(g){return g.clk>=300});
+        closeIv(fno());var sw=segSwaps(),R0=mkR(ALL,false);if(sw.some(Boolean))R0=normR(R0,sw);var an=buildAnalysis(R0);an.iv=ALL.iv.filter(function(v){return v[1]!=null});var good=segs.filter(function(g){return g.clk>=300});
         if(good.length>=2){
           an.parts=good.map(function(g){
             var pa=buildAnalysis(mkR(g,true));
-            pa.map=null;pa.chat=null;pa.f0=g.f0;
+            pa.map=null;pa.chat=null;pa.f0=g.f0;pa.sw=!!sw[segs.indexOf(g)];
             pa.players.forEach(function(q){
               var w=an.players.filter(function(z){return z.id===q.id})[0];
               if(w){q.msgs=w.msgs;q.adm=w.adm;if(!q.fl)q.fl=w.fl}
@@ -1972,14 +2007,16 @@ function setPart(n){
 function viewOf(M){
   var A=M&&M.A;
   if(!A||!A.parts||!S.part||!A.parts[S.part-1])return M;
-  var p=A.parts[S.part-1],a=sideTeam(M,1),b=sideTeam(M,2);
+  var p=A.parts[S.part-1],M0=M;
+  if(p.sw)M=Object.assign({},M0,{t1:M0.t2,t2:M0.t1,n1:M0.n2,n2:M0.n1});
+  var a=sideTeam(M,1),b=sideTeam(M,2);
   return Object.assign({},M,{A:Object.assign({},p,{map:A.map,chat:A.chat,adv:Object.assign({},p.adv,{spec:A.adv?A.adv.spec:[]})}),
-    s1:p.s1,s2:p.s2,g1:[],g2:[],title:(M.title||(a.name+" vs "+b.name))+" · Partido "+S.part});
+    s1:p.s1,s2:p.s2,g1:[],g2:[],title:(M.title||(a.name+" vs "+b.name))+" · Partido "+S.part+(p.sw?" (los equipos cambiaron de lado)":"")});
 }
 function partTabs(M){
   var A=M.A;if(!A||!A.parts||A.parts.length<2)return "";
   var it=[[0,"Partido completo",A.s1+"–"+A.s2]];
-  A.parts.forEach(function(p,i){it.push([i+1,"Partido "+(i+1),p.s1+"–"+p.s2])});
+  A.parts.forEach(function(p,i){it.push([i+1,"Partido "+(i+1),p.sw?p.s2+"–"+p.s1:p.s1+"–"+p.s2])});
   return '<nav class="sub2 ptabs" aria-label="Partidos del replay">'+it.map(function(x){return '<button type="button" data-part="'+x[0]+'"'+(S.part===x[0]?' aria-current="page"':"")+'>'+x[1]+' <span class="ps">'+x[2]+'</span></button>'}).join("")+'</nav>';
 }
 function tabEve(M){
