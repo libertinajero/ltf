@@ -575,6 +575,18 @@ a.tile b{font-weight:600;font-size:17px;line-height:1.2}
 .hx-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;opacity:.4;pointer-events:none}
 .hx:has(.hx-vid)::after{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at center,rgba(3,6,15,.15) 0%,rgba(3,6,15,.75) 100%),linear-gradient(180deg,rgba(3,6,15,.5),transparent 30%,transparent 70%,rgba(3,6,15,.9));pointer-events:none}
 @media (prefers-reduced-motion:reduce){.hx-vid{display:none}}
+.plink{color:inherit;text-decoration:underline dotted rgba(116,172,223,.6);text-underline-offset:3px}
+.plink:hover{color:var(--celeste)}
+.figrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.figname{font-family:var(--head);font-size:22px}
+.figr .pill{font-size:20px;padding:6px 14px}
+.fig-top{border-top-color:#dcecff}
+.pstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:14px}
+.pst{border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;background:rgba(255,255,255,.02)}
+.pst b{display:block;font-family:var(--head);font-size:24px}
+.pst span{color:var(--muted);font-size:12px}
+.panel td a:not(.plink){color:#cfe6ff}
+@media (max-width:480px){.figteam>span:last-child{display:none}}
 </style>
 </head>
 <body>
@@ -603,14 +615,14 @@ function css(n){return getComputedStyle(document.documentElement).getPropertyVal
 /* =====================================================================
    Estado
    ===================================================================== */
-var MTABS=[["inicio","Inicio"],["subir","Subir partido"],["partidos","Replays"],["tabla","Tabla"],["fixture","Fixture"],["goleadores","Goleadores"],["plantillas","Plantillas"],["h2h","Cara a cara"]];
+var MTABS=[["inicio","Inicio"],["subir","Subir partido"],["partidos","Replays"],["tabla","Tabla"],["fixture","Fixture"],["goleadores","Goleadores"],["figuras","Figuras"],["plantillas","Plantillas"],["h2h","Cara a cara"],["comparar","Comparar"],["votar","Votar"]];
 var MODES=["x5","x7"];
 var DISCORD_URL="https://discord.gg/BT5DZNH2Te"; /* pegá acá el link de invitación del Discord (o ponelo en config.js como discord:"https://...") */
 var SUBS=[["rep","Ver partido"],["par","Estadísticas"],["res","Alineaciones"],["jug","Jugadores"],["gol","Goles"],["pas","Pases"],["adv","Avanzado"],["cal","Mapas de calor"],["chat","Chat"],["eve","Cronología"],["per","Perfiles"]];
 function blankUp(){return {title:"",round:"",t1:"",t2:"",status:"",bad:false,busy:false,M:null,buf:null}}
 var S={user:null,modal:false,authMsg:"",teams:[],matches:[],role:"",code:"",canWrite:false,isAdmin:false,loaded:false,err:"",tab:"home",mode:"x5",roster:[],tm:null,R:{},rmsg:"",part:0,ssel:-1,
   cur:null,curMsg:"",mtab:"rep",sort:{k:"r",d:-1},pf:0,pr:0,sf:0,heat:"t1",up:blankUp(),E:{id:"",name:"",color:"#2f66c9",logo:""},
-  armed:"",banner:"",sig:"",busyTeam:false,fx:null,av:null,H:{a:"",b:""},FX:{round:"",stage:"",t1:"",t2:""},AV:{title:"",body:""}};
+  armed:"",banner:"",sig:"",busyTeam:false,fx:null,av:null,H:{a:"",b:""},FX:{round:"",stage:"",t1:"",t2:""},GEN:{a:"",b:"",sc:6},CP:{a:"",b:""},FD:{},fmsg:"",vp:undefined,vg:undefined,AV:{title:"",body:""}};
 var CM=null; // partido que se está dibujando ahora (vista previa o guardado)
 
 /* =====================================================================
@@ -1093,13 +1105,13 @@ function vHome(){
   }
   h+='<div class="hgrid">'+
     '<a class="hbtn" href="#liga"><span class="hi">'+ic("cup")+'</span><b>Liga</b><small>Tabla, replays, goleadores y plantillas · x5 y x7</small></a>'+
-    '<a class="hbtn" href="#musica"><span class="hi">'+ic("note")+'</span><b>Música</b><small>Los temas de la liga y tu playlist de Spotify</small></a>'+
+    '<a class="hbtn" href="#musica"><span class="hi">'+ic("note")+'</span><b>Música</b><small>Los temas de la liga</small></a>'+
     '<a class="hbtn soon" href="#host3"><span class="hi">'+ic("pad")+'</span><b>Host x3</b><small>Estadísticas del host x3</small><em>Próximamente</em></a>'+
     (dc?'<a class="hbtn" href="'+esc(dc)+'" target="_blank" rel="noopener"><span class="hi">'+DC_SVG+'</span><b>Discord</b><small>Sumate a la comunidad</small></a>'
        :'<div class="hbtn soon"><span class="hi">'+DC_SVG+'</span><b>Discord</b><small>Sumate a la comunidad</small><em>Próximamente</em></div>')+
     '</div>';
   var T=[["Replays","Mirá cada partido jugada por jugada, con mapas de calor, xG y chat.","partidos","play"],["Tabla","Posiciones, diferencia de gol y los últimos 5 partidos de cada equipo.","tabla","tabla"],["Fixture","Fechas, resultados y llaves de playoffs.","fixture","fix"],
-    ["Goleadores","Quién la mete más en cada modalidad.","goleadores","gol"],["Plantillas","Los jugadores habilitados de cada equipo.","plantillas","team"],["Cara a cara","Dos equipos, un historial completo.","h2h","vs"]];
+    ["Goleadores","Quién la mete más en cada modalidad.","goleadores","gol"],["Figuras","El jugador y el equipo de cada fecha.","figuras","gol"],["Plantillas","Los jugadores habilitados de cada equipo.","plantillas","team"],["Cara a cara","Dos equipos, un historial completo.","h2h","vs"]];
   h+='<section id="funciones" class="fn"><h2 class="fn-t">Explorá la liga</h2><p class="fn-s">Todo lo de la LTF, jugada por jugada y fecha por fecha</p><div class="fn-grid">'+T.map(function(t,i){
     return '<div class="fn-c"><span class="fn-n">0'+(i+1)+'</span><span class="fn-ic">'+ic(t[3])+'</span><h3>'+t[0]+'</h3><p>'+t[1]+'</p><div class="fn-go"><a href="#x5-'+t[2]+'">x5</a><a href="#x7-'+t[2]+'">x7</a></div></div>';
   }).join("")+'</div></section>';
@@ -1112,8 +1124,8 @@ function spParse(v){
   var m=v.match(/open\.spotify\.com\/(?:intl-[a-z]{2,3}\/)?(?:embed\/)?(playlist|album|track|artist|show|episode)\/([A-Za-z0-9]{22})/)||v.match(/^spotify:(playlist|album|track|artist|show|episode):([A-Za-z0-9]{22})$/);
   return m?{t:m[1],id:m[2]}:null;
 }
-function spSaved(){var v="";try{v=localStorage.getItem("ltf-spotify")||""}catch(e){}return spParse(v)}
-function spGet(){return spSaved()||spParse(CFG.spotify)}
+function spSaved(){return null}
+function spGet(){return null}
 function spSet(v){try{if(v)localStorage.setItem("ltf-spotify",v);else localStorage.removeItem("ltf-spotify")}catch(e){}}
 function saveSpotify(){
   var el=$("spin"),p=spParse(el?el.value:"");
@@ -1123,23 +1135,12 @@ function saveSpotify(){
   render();
 }
 function vMusica(){
-  var sp=spGet(),mine=!!spSaved(),h='<section class="landing"><span class="pill2">Música</span><h1 class="big">Poné tu <span>playlist</span></h1><p class="sub">Escuchá los temas de la liga o cargá tu playlist de Spotify para que suene mientras mirás los replays.</p></section>';
-  h+='<div class="panel"><h2>Tu playlist de Spotify</h2><p class="note" style="margin:0 0 10px">En Spotify abrí tu playlist, tocá los tres puntitos, después Compartir y Copiar enlace. Pegalo acá abajo. Queda guardada en este navegador.</p>'+
-    '<div class="row"><div class="grow"><label for="spin">Link de Spotify</label><input id="spin" type="text" autocomplete="off" placeholder="https://open.spotify.com/playlist/..."></div><button type="button" class="primary" data-sp="save">Guardar</button></div>'+
-    (SPMSG?'<p class="status bad" role="status">'+esc(SPMSG)+'</p>':"");
-  if(sp){
-    h+='<div id="spslot" style="height:'+(sp.t==="track"||sp.t==="episode"?152:380)+'px;margin-top:14px"></div>'+
-      '<div class="spwarn"><b>¿No suena completo o se corta a los 30 segundos?</b> Desactivá el bloqueo de cookies de terceros para esta página y recargala. En Brave: tocá el ícono del león en la barra de direcciones y apagá los Escudos para este sitio. En Chrome: tocá el ícono a la izquierda de la dirección, entrá a Configuración del sitio y permití las cookies de terceros. Además tenés que tener la sesión iniciada en open.spotify.com en el mismo navegador.</div>'+
-      '<div class="cta" style="justify-content:flex-start;margin-top:12px"><a class="btn spbtn" href="https://open.spotify.com/'+sp.t+'/'+sp.id+'" target="_blank" rel="noopener">'+IC.sp+'Abrir en Spotify</a></div>'+
-      '<p class="note">La música de fondo queda desactivada mientras uses Spotify. '+(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)?'En el celu el reproductor de acá suele quedarse en fragmentos de 30 segundos aunque tengas la sesión iniciada, porque el navegador bloquea la sesión de Spotify dentro de otras páginas. Tocá “Abrir en Spotify” y la escuchás completa en la app.':'Si no tenés la sesión iniciada en Spotify en este navegador, solo vas a escuchar fragmentos de 30 segundos. Iniciá sesión en open.spotify.com y recargá, o usá “Abrir en Spotify”.')+' Mientras tengas tu playlist cargada, el reproductor flotante controla Spotify (play y barra de tiempo); para cambiar de tema usá el reproductor de Spotify de esta página. Para volver a la música de la liga, tocá “Quitar mi playlist”.</p>'+
-      (mine?'<div class="cta" style="justify-content:flex-start"><button type="button" class="danger" data-sp="clear">Quitar mi playlist</button></div>':"");
-  }else h+='<p class="note">Todavía no cargaste ninguna playlist.</p>';
-  h+='</div>';
+  var h='<section class="landing"><span class="pill2">Música</span><h1 class="big">Música de la <span>LTF</span></h1><p class="sub">Los temas de la liga suenan de fondo mientras mirás los replays.</p></section>';
   var L=MU.list||[];
   if(L.length){
-    h+='<div class="panel"><h2>Música de la LTF</h2><p class="note" style="margin:0 0 8px">Son los temas que suenan de fondo en la página. Tocá uno para escucharlo.</p>'+
+    h+='<div class="panel"><h2>Música de la LTF</h2><p class="note" style="margin:0 0 8px">Tocá un tema para escucharlo.</p>'+
       L.map(function(t,i){return '<button type="button" class="trk" data-trk="'+i+'"><span class="tn">'+(i+1<10?"0":"")+(i+1)+'</span><span class="tt"><b>'+esc(t.t)+'</b><small>'+esc(t.a)+'</small></span><span class="tp">♪</span></button>'}).join("")+'</div>';
-  }
+  }else h+='<div class="panel"><p class="note">Todavía no hay música subida.</p></div>';
   return h;
 }
 function vLiga(){
@@ -1231,7 +1232,7 @@ function vInicio(){
   return '<section class="landing hero-ar"><span class="pill2">LTF · Liga '+md+' · Temporada 1</span><h1 class="big">Subí tu <span>replay</span> acá</h1>'+
     '<p class="sub">Subí el .hbr2 de tu partido y la sala lo procesa: goles, figura, mapas de calor y la repetición completa, con un link para compartir.</p>'+
     '<div class="cta"><a class="btn primary" href="'+H+'subir">Subir mi partido</a><a class="btn ghost" href="'+H+'partidos">Ver replays</a></div></section>'+
-    '<div class="tiles"><a class="tile" href="'+H+'subir"><b>Subir partido</b></a><a class="tile" href="'+H+'partidos"><b>Replays</b></a><a class="tile" href="'+H+'tabla"><b>Tabla</b></a><a class="tile" href="'+H+'fixture"><b>Fixture</b></a><a class="tile" href="'+H+'goleadores"><b>Goleadores</b></a><a class="tile" href="'+H+'plantillas"><b>Plantillas</b></a><a class="tile" href="'+H+'h2h"><b>Cara a cara</b></a></div>'+
+    '<div class="tiles"><a class="tile" href="'+H+'subir"><b>Subir partido</b></a><a class="tile" href="'+H+'partidos"><b>Replays</b></a><a class="tile" href="'+H+'tabla"><b>Tabla</b></a><a class="tile" href="'+H+'fixture"><b>Fixture</b></a><a class="tile" href="'+H+'goleadores"><b>Goleadores</b></a><a class="tile" href="'+H+'figuras"><b>Figuras</b></a><a class="tile" href="'+H+'plantillas"><b>Plantillas</b></a><a class="tile" href="'+H+'h2h"><b>Cara a cara</b></a></div>'+
     (n?'<h2>Últimos replays</h2><div class="mlist">'+ms.slice(0,6).map(mcard).join("")+'</div>':"");
 }
 function vTabla(){
@@ -1290,16 +1291,16 @@ function fxCard(f,md){
 function vFixture(){
   var md=S.mode;
   if(S.fx===null)return empty("Falta activar el fixture","Corré migracion_novedades.sql en Supabase y recargá la página.");
-  var list=S.fx.filter(function(f){return (f.mode||"x5")===md}),lg=list.filter(function(f){return !f.stage}),po=list.filter(function(f){return f.stage}),h="",rounds={};
+  var list=S.fx.filter(function(f){return (f.mode||"x5")===md}),lg=list.filter(function(f){return !f.stage}),po=list.filter(function(f){return f.stage}),h=(S.fmsg?'<div class="panel"><p class="status" role="status" style="margin:0">'+esc(S.fmsg)+'</p></div>':"")+(list.some(function(f){return f.kickoff})?'<div class="cta" style="justify-content:flex-start"><button type="button" class="primary" data-act="ics" data-r="0" data-s="">📅 Agregar todo el calendario al celular</button></div>':""),rounds={};
   lg.forEach(function(f){var k=f.round==null?0:f.round;(rounds[k]=rounds[k]||[]).push(f)});
   Object.keys(rounds).map(Number).sort(function(a,b){return a-b}).forEach(function(k){
-    h+='<div class="panel"><h2>'+(k?"Fecha "+k:"Sin fecha")+'</h2>'+rounds[k].map(function(f){return fxCard(f,md)}).join("")+'</div>';
+    h+='<div class="panel"><h2>'+(k?"Fecha "+k:"Sin fecha")+'</h2>'+(k?fxBar(rounds[k],md,k,""):"")+rounds[k].map(function(f){return fxCard(f,md)}).join("")+'</div>';
   });
   if(po.length){
     var stages=[];po.forEach(function(f){if(stages.indexOf(f.stage)<0)stages.push(f.stage)});
-    stages.sort(function(a,b){var x=STAGES.indexOf(a),y=STAGES.indexOf(b);return (x<0?99:x)-(y<0?99:y)});
+    var sk=function(q){var i=q.indexOf(" · ");return (i<0?"":q.slice(0,i))+"|"+(function(z){var x=STAGES.indexOf(z);return x<0?99:x})(i<0?q:q.slice(i+3))};stages.sort(function(a,b){return sk(a)<sk(b)?-1:sk(a)>sk(b)?1:0});
     h+='<div class="panel"><h2>Playoffs</h2><div class="bracket">'+stages.map(function(s){
-      return '<div class="bcol"><div class="hlbl" style="margin-top:0">'+esc(s)+'</div>'+po.filter(function(f){return f.stage===s}).map(function(f){return fxCard(f,md)}).join("")+'</div>';
+      return '<div class="bcol"><div class="hlbl" style="margin-top:0">'+esc(s)+'</div>'+fxBar(po.filter(function(f){return f.stage===s}),md,0,s)+po.filter(function(f){return f.stage===s}).map(function(f){return fxCard(f,md)}).join("")+'</div>';
     }).join("")+'</div></div>';
   }
   if(!list.length)h+=empty("Todavía no hay fixture en "+md,S.isAdmin?"Cargá el primer partido abajo.":"Cuando el admin cargue las fechas, aparecen acá con sus resultados.");
@@ -1307,12 +1308,239 @@ function vFixture(){
   if(S.isAdmin){
     var X=S.FX,ts=modeTeams(md).slice().sort(function(a,b){return a.name.localeCompare(b.name)});
     var op=function(sel){return '<option value="">Elegí equipo</option>'+ts.map(function(t){return '<option value="'+esc(t.id)+'"'+(String(t.id)===String(sel)?" selected":"")+'>'+esc(t.name)+'</option>'}).join("")};
+    h+=genPanel(md,ts,op);
     h+='<div class="panel"><h2>Agregar al fixture · '+md+'</h2><div class="stack"><div class="grid2"><div><label for="fxr">Fecha número</label><input id="fxr" type="number" min="1" max="99" data-fx="round" value="'+esc(X.round)+'"></div>'+
       '<div><label for="fxs">Fase</label><select id="fxs" data-fx="stage"><option value="">Fase de liga</option>'+STAGES.map(function(s){return '<option'+(X.stage===s?" selected":"")+'>'+s+'</option>'}).join("")+'</select></div></div>'+
       '<div class="grid2"><div><label for="fx1">Equipo 1</label><select id="fx1" data-fx="t1">'+op(X.t1)+'</select></div><div><label for="fx2">Equipo 2</label><select id="fx2" data-fx="t2">'+op(X.t2)+'</select></div></div>'+
       '<button type="button" class="primary" data-act="addfx">Agregar al fixture</button>'+rmsgHTML()+'</div></div>';
   }
   return h;
+}
+/* ---- Generador automático: todos contra todos (solo ida), 2 rondas, Copa Apertura / Clausura ---- */
+function rrRounds(ids,scA,scB,scRound){
+  var t=ids.slice();if(t.length%2)t.push(null);
+  var n=t.length,R=[],i,k;
+  for(k=0;k<n-1;k++){
+    var r=[];
+    for(i=0;i<n/2;i++){var a=t[i],b=t[n-1-i];if(a!=null&&b!=null)r.push(k%2?[b,a]:[a,b])}
+    R.push(r);
+    t.splice(1,0,t.pop());
+  }
+  /* el superclásico se mueve a la fecha pedida (el orden de las fechas es libre) */
+  if(scA&&scB&&scA!==scB){
+    var at=-1;R.forEach(function(r,j){r.forEach(function(p){if((p[0]===scA&&p[1]===scB)||(p[0]===scB&&p[1]===scA))at=j})});
+    var to=Math.min(Math.max(scRound,1),R.length)-1;
+    if(at>=0&&at!==to){var tmp=R[at];R[at]=R[to];R[to]=tmp}
+  }
+  return R;
+}
+function fxChain(list,msg){
+  S.busy=true;S.rmsg="Guardando… 0/"+list.length;render();
+  var i=0;
+  (function next(){
+    if(i>=list.length){S.busy=false;S.rmsg=msg;return loadAll(true).then(render)}
+    var p=list[i++];S.rmsg="Guardando… "+i+"/"+list.length;
+    return api.rpc("save_fixture",{code:S.code,p_mode:S.mode,p_round:p.round||null,p_stage:p.stage||null,p_t1:String(p.t1),p_t2:String(p.t2)}).then(next);
+  })().catch(function(e){S.busy=false;failN(e)});
+}
+function genLiga(ronda){
+  var md=S.mode,ts=modeTeams(md),G=S.GEN;
+  if(ts.length<4){S.rmsg="Hacen falta al menos 4 equipos en "+md+".";render();return}
+  var ids=ts.map(function(t){return String(t.id)}).sort(),N=ids.length%2?ids.length+1:ids.length,F=N-1,off=(ronda-1)*F;
+  var dup=(S.fx||[]).some(function(f){return (f.mode||"x5")===md&&!f.stage&&f.round!=null&&+f.round>off&&+f.round<=off+F});
+  if(dup){S.rmsg="Ya hay fechas cargadas en la ronda "+ronda+" (fechas "+(off+1)+" a "+(off+F)+"). Borralas primero si querés generar de nuevo.";render();return}
+  var R=rrRounds(ids,G.a&&String(G.a),G.b&&String(G.b),+G.sc||6),list=[];
+  R.forEach(function(r,j){r.forEach(function(p){list.push({round:off+j+1,t1:p[0],t2:p[1]})})});
+  fxChain(list,"Listo: ronda "+ronda+" generada ("+F+" fechas, "+list.length+" partidos).");
+}
+function roundTable(md,ronda){
+  var ts=modeTeams(md),F=(ts.length%2?ts.length+1:ts.length)-1,lo=(ronda-1)*F+1,hi=ronda*F,all=S.matches;
+  S.matches=all.filter(function(m){return m.round!=null&&+m.round>=lo&&+m.round<=hi});
+  var r=standings(md);S.matches=all;return r;
+}
+function copaName(ronda){return ronda===1?"Apertura":"Clausura"}
+function genCopa(ronda){
+  var md=S.mode,c=copaName(ronda),rows=roundTable(md,ronda),q=rows.slice(0,8);
+  if(q.length<8){S.rmsg="Hacen falta 8 equipos para la Copa "+c+".";render();return}
+  var ts=modeTeams(md),F=(ts.length%2?ts.length+1:ts.length)-1,played=rows.every(function(r){return r.pj>=ts.length-1});
+  if(!played&&!confirm("Todavía hay equipos que no jugaron todas sus fechas de la ronda "+ronda+". ¿Generar la Copa "+c+" igual con la tabla de hoy?"))return;
+  var st=c+" · Cuartos";
+  if((S.fx||[]).some(function(f){return f.stage===st&&(f.mode||"x5")===md})){S.rmsg="La Copa "+c+" ya tiene cuartos cargados.";render();return}
+  var pairs=[[0,7],[3,4],[1,6],[2,5]],list=pairs.map(function(p){return {stage:st,t1:q[p[0]].t.id,t2:q[p[1]].t.id}});
+  fxChain(list,"Listo: cuartos de la Copa "+c+" (1° vs 8°, 4° vs 5°, 2° vs 7°, 3° vs 6°).");
+}
+function advCopa(c){
+  var md=S.mode,order=["Cuartos","Semifinal","Final"],cur=null,i;
+  for(i=order.length-1;i>=0;i--){if((S.fx||[]).some(function(f){return f.stage===c+" · "+order[i]&&(f.mode||"x5")===md})){cur=i;break}}
+  if(cur==null||cur>=2){S.rmsg=cur==null?"Primero generá los cuartos.":"La final ya está armada.";render();return}
+  var fs=S.fx.filter(function(f){return f.stage===c+" · "+order[cur]&&(f.mode||"x5")===md}),W=[],bad="";
+  fs.forEach(function(f){var r=fxResult(f,md);if(!r)bad="Faltan resultados en "+order[cur]+".";else if(r.s1===r.s2)bad="Hay un empate en "+order[cur]+": cargá a mano quién avanza.";else W.push(r.s1>r.s2?f.t1:f.t2)});
+  if(bad){S.rmsg=bad;render();return}
+  var nx=c+" · "+order[cur+1],list=[];
+  for(i=0;i+1<W.length;i+=2)list.push({stage:nx,t1:W[i],t2:W[i+1]});
+  fxChain(list,"Listo: "+order[cur+1]+" de la Copa "+c+".");
+}
+function genPanel(md,ts,op){
+  var G=S.GEN,sel=function(k){return '<select data-gen="'+k+'">'+op(G[k])+'</select>'},F=(ts.length%2?ts.length+1:ts.length)-1;
+  var h='<div class="panel"><h2>Generar fechas · '+md+'</h2><div class="stack"><p class="note" style="margin:0">Todos contra todos, solo ida: '+ts.length+' equipos = '+F+' fechas por ronda. Después de cada ronda, los 8 primeros pasan a la copa (Apertura tras la ronda 1, Clausura tras la ronda 2).</p>'+
+    '<div class="grid2"><div><label>Superclásico: equipo 1</label>'+sel("a")+'</div><div><label>Superclásico: equipo 2</label>'+sel("b")+'</div></div>'+
+    '<div><label for="gsc">Fecha del superclásico</label><input id="gsc" type="number" min="1" max="'+F+'" data-gen="sc" value="'+esc(G.sc)+'"></div>'+
+    '<div class="grid2"><button type="button" class="primary" data-act="genliga" data-r="1"'+(S.busy?" disabled":"")+'>Generar ronda 1 (fechas 1–'+F+')</button><button type="button" class="primary" data-act="genliga" data-r="2"'+(S.busy?" disabled":"")+'>Generar ronda 2 (fechas '+(F+1)+'–'+2*F+')</button></div>'+
+    '<div class="grid2"><button type="button" data-act="gencopa" data-r="1"'+(S.busy?" disabled":"")+'>Copa Apertura: cuartos</button><button type="button" data-act="gencopa" data-r="2"'+(S.busy?" disabled":"")+'>Copa Clausura: cuartos</button></div>'+
+    '<div class="grid2"><button type="button" data-act="advcopa" data-c="Apertura"'+(S.busy?" disabled":"")+'>Apertura: siguiente fase</button><button type="button" data-act="advcopa" data-c="Clausura"'+(S.busy?" disabled":"")+'>Clausura: siguiente fase</button></div>'+
+    rmsgHTML()+'</div></div>';
+  return h;
+}
+/* ---- Jugadores: estadísticas, insignias y comparador ---- */
+function allPlayers(md){
+  var P={};
+  modeMatches(md).filter(isOff).forEach(function(m){
+    (plOf(m)||[]).forEach(function(p){P[String(p.n).toLowerCase()]=p.n});
+    [m.g1,m.g2].forEach(function(l){(l||[]).forEach(function(x){if(/\(AG\)/i.test(x))return;var n=scorerName(x);if(n)P[n.toLowerCase()]=n})});
+  });
+  return Object.keys(P).map(function(k){return P[k]}).sort(function(a,b){return a.localeCompare(b)});
+}
+function playerStats(md,name){
+  var key=String(name).toLowerCase(),o={pj:0,g:0,a:0,rs:[],team:null};
+  modeMatches(md).filter(isOff).forEach(function(m){
+    var me=null,gc=0;
+    (plOf(m)||[]).forEach(function(p){if(String(p.n).toLowerCase()===key)me=p});
+    [[m.g1,1],[m.g2,2]].forEach(function(x){(x[0]||[]).forEach(function(l){if(!/\(AG\)/i.test(l)&&scorerName(l).toLowerCase()===key){gc++;if(!me)o.team=matchTeam(m,x[1])}})});
+    if(!me&&!gc)return;
+    o.pj++;o.g+=gc;
+    if(me){o.team=matchTeam(m,me.tm);o.a+=me.a||0;if(me.r!=null)o.rs.push(me.r)}
+  });
+  o.avg=o.rs.length?o.rs.reduce(function(a,b){return a+b},0)/o.rs.length:null;
+  o.best=o.rs.length?Math.max.apply(null,o.rs):null;
+  return o;
+}
+function badges(md){
+  var ps=allPlayers(md).map(function(n){var x=playerStats(md,n);x.n=n;return x}),out=[];
+  var top=function(arr,f,min){var b=null;arr.forEach(function(x){var v=f(x);if(v>=min&&(!b||v>f(b)))b=x});return b};
+  var g=top(ps,function(x){return x.g},1),a=top(ps,function(x){return x.a},1),f=top(ps.filter(function(x){return x.rs.length>=2}),function(x){return x.avg},0.1);
+  if(g)out.push(["⚽","Goleador",g.n,g.g+" goles",g.team]);
+  if(a)out.push(["🎯","Asistidor",a.n,a.a+" asistencias",a.team]);
+  if(f)out.push(["⭐","Mejor rating",f.n,f.avg.toFixed(1)+" de promedio",f.team]);
+  return out;
+}
+function badgesHTML(md){
+  var b=badges(md);if(!b.length)return "";
+  return '<div class="panel"><h2>Insignias · '+md+'</h2><div class="pcards">'+b.map(function(x){
+    return '<div class="pcard"><div class="hd"><span style="font-size:24px">'+x[0]+'</span><span><small>'+x[1]+'</small><br><b>'+pLink(x[2])+'</b></span></div><div class="kvs"><span>'+esc(x[3])+(x[4]?' · '+esc(x[4].name):"")+'</span></div></div>';
+  }).join("")+'</div><p class="note">El mejor arquero se suma cuando los replays guarden las atajadas.</p></div>';
+}
+function vComparar(){
+  var md=S.mode,ps=allPlayers(md),A=S.CP.a,B=S.CP.b;
+  if(ps.length<2)return empty("Todavía no hay jugadores","Cuando se guarden partidos oficiales, acá podés comparar jugadores.");
+  var op=function(sel){return '<option value="">Elegí jugador</option>'+ps.map(function(n){return '<option value="'+esc(n)+'"'+(n===sel?" selected":"")+'>'+esc(n)+'</option>'}).join("")};
+  var h='<div class="panel"><h2>Comparar jugadores · '+md+'</h2><div class="grid2"><div><label for="cpa">Jugador 1</label><select id="cpa" data-cp="a">'+op(A)+'</select></div><div><label for="cpb">Jugador 2</label><select id="cpb" data-cp="b">'+op(B)+'</select></div></div></div>';
+  if(A&&B){
+    var x=playerStats(md,A),y=playerStats(md,B),ca=(x.team&&x.team.color)||"#74acdf",cb=(y.team&&y.team.color)||"#d8483b";
+    var f1=function(v){return v==null?0:+v.toFixed(1)};
+    h+='<div class="panel"><div class="figrow"><span><b class="figname">'+esc(A)+'</b><br><small>'+(x.team?esc(x.team.name):"")+'</small></span><span style="text-align:right"><b class="figname">'+esc(B)+'</b><br><small>'+(y.team?esc(y.team.name):"")+'</small></span></div>'+
+      cmp2("Partidos",x.pj,y.pj,ca,cb)+cmp2("Goles",x.g,y.g,ca,cb)+cmp2("Asistencias",x.a,y.a,ca,cb)+cmp2("Rating promedio",f1(x.avg),f1(y.avg),ca,cb)+cmp2("Mejor rating",f1(x.best),f1(y.best),ca,cb)+'</div>';
+  }
+  return h;
+}
+
+/* ---- Votaciones (hace falta sesión de Discord; un voto por persona) ---- */
+function vrpc(name,body){
+  var h=api.h(),ss=authLoad();if(ss&&ss.at)h.Authorization="Bearer "+ss.at;
+  return fetch(CFG.url+"/rest/v1/rpc/"+name,{method:"POST",headers:h,body:JSON.stringify(body)}).then(function(r){return r.text().then(function(t){var j=null;try{j=JSON.parse(t)}catch(e){}if(!r.ok)throw new Error((j&&(j.message||j.hint))||("error "+r.status));return j})});
+}
+function loadVotos(){
+  if(S.vbusy)return;S.vbusy=true;
+  Promise.all([vrpc("votos_resumen",{p_kind:"pred"}),vrpc("votos_resumen",{p_kind:"gol"})]).then(function(r){S.vp=r[0]||[];S.vg=r[1]||[];S.vbusy=false;S.vmsg="";render()})
+    .catch(function(e){S.vp=S.vp||[];S.vg=S.vg||[];S.vbusy=false;S.vmsg="No se pudieron cargar los votos ("+((e&&e.message)||"error")+"). ¿Corriste votos.sql en Supabase?";render()});
+}
+function castVote(k,ref,c){
+  if(!S.user){S.modal=true;S.authMsg="Entrá con Discord para votar.";render();return}
+  vrpc("votar",{p_kind:k,p_ref:ref,p_choice:c}).then(function(){S.vbusy=false;loadVotos()}).catch(function(e){S.vmsg="No se pudo votar ("+((e&&e.message)||"error")+").";render()});
+}
+function voteRows(rows,ref){var o={n:{},t:0,mine:null};(rows||[]).forEach(function(r){if(String(r.ref)!==String(ref))return;o.n[r.choice]=+r.n;o.t+=+r.n;if(r.mine)o.mine=r.choice});return o}
+function voteBtn(k,ref,c,label,V){
+  var n=V.n[c]||0,p=V.t?Math.round(n/V.t*100):0,on=V.mine===c;
+  return '<button type="button" class="'+(on?"primary":"")+'" data-act="vote" data-k="'+k+'" data-ref="'+esc(ref)+'" data-c="'+esc(c)+'" style="text-align:left">'+label+' <small>· '+p+'% ('+n+')</small></button>';
+}
+function vVotar(){
+  var md=S.mode;
+  if(S.vp===undefined)loadVotos();
+  var h='<div class="panel"><h2>Votá</h2><p class="note" style="margin:0">'+(S.user?"Votás como "+esc(S.user.name)+". Podés cambiar tu voto cuando quieras.":"Para votar tenés que entrar con Discord (así hay un voto por persona).")+'</p>'+
+    (S.user?"":'<div class="cta" style="justify-content:flex-start;margin-top:10px"><button type="button" class="dc" data-act="openlogin">'+DC_SVG+'Entrar con Discord</button></div>')+
+    (S.vmsg?'<p class="status bad" role="status">'+esc(S.vmsg)+'</p>':"")+'</div>';
+  /* predicción: partidos pendientes de la próxima fecha */
+  var pend=(S.fx||[]).filter(function(f){return (f.mode||"x5")===md&&!f.stage&&f.round!=null&&!fxResult(f,md)});
+  var nr=pend.length?Math.min.apply(null,pend.map(function(f){return +f.round})):null;
+  h+='<div class="panel"><h2>Predicción'+(nr?" · Fecha "+nr:"")+'</h2>';
+  if(!nr)h+='<p class="note" style="margin:0">No hay partidos pendientes en el fixture.</p>';
+  pend.filter(function(f){return +f.round===nr}).forEach(function(f){
+    var a=fxTeam(f.t1),b=fxTeam(f.t2),V=voteRows(S.vp,f.id);
+    h+='<div class="stack" style="margin:10px 0"><b>'+esc(a.name)+' vs '+esc(b.name)+'</b><div class="grid2">'+voteBtn("pred",f.id,"1","Gana "+esc(a.name),V)+voteBtn("pred",f.id,"2","Gana "+esc(b.name),V)+'</div>'+voteBtn("pred",f.id,"X","Empate",V)+'</div>';
+  });
+  h+='</div>';
+  /* mejor gol de la fecha */
+  var ms=modeMatches(md).filter(isOff).filter(function(m){return +m.round>0}),rs=[];
+  ms.forEach(function(m){if(rs.indexOf(+m.round)<0)rs.push(+m.round)});rs.sort(function(a,b){return b-a});
+  var cur=rs.indexOf(+S.fr)>=0?+S.fr:rs[0];
+  h+='<div class="panel"><h2>Mejor gol de la fecha'+(cur?" "+cur:"")+'</h2>';
+  if(!cur)h+='<p class="note" style="margin:0">Todavía no hay fechas jugadas.</p>';
+  else{
+    h+='<div class="pfbar">'+rs.map(function(r){return '<button type="button" class="pfchip'+(r===cur?" on":"")+'" data-act="fround" data-v="'+r+'">Fecha '+r+'</button>'}).join("")+'</div>';
+    ms.filter(function(m){return +m.round===cur}).forEach(function(m){
+      [[m.g1,1],[m.g2,2]].forEach(function(x){(x[0]||[]).forEach(function(l,i){
+        if(/\(AG\)/i.test(l))return;
+        var ref=m.id+":"+x[1]+":"+i,V=voteRows(S.vg,ref),t=matchTeam(m,x[1]);
+        h+='<div class="stack" style="margin:8px 0">'+voteBtn("gol",ref,"1","⚽ "+esc(String(l))+' · '+esc(t.name),V)+'<small><a href="#partido-'+esc(m.id)+'">Ver el replay</a></small></div>';
+      })});
+    });
+  }
+  return h+'</div>';
+}
+/* ---- Calendario: fecha y hora de cada fecha (la pone el admin a mano), .ics para el celular, aviso a Discord ---- */
+function fxWhen(arr){var w=null;arr.forEach(function(f){if(f.kickoff&&!w)w=f.kickoff});return w}
+function fmtWhen(iso){try{return new Date(iso).toLocaleString("es-AR",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"})}catch(e){return iso}}
+function toLocalInput(iso){var d=new Date(iso);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
+function fxBar(arr,md,round,stage){
+  var w=fxWhen(arr),key=stage?"s:"+stage:"r:"+round,at=' data-r="'+round+'" data-s="'+esc(stage)+'"';
+  var h='<div class="stack" style="margin:0 0 10px">'+(w?'<p class="note" style="margin:0">📅 '+esc(fmtWhen(w))+'</p>':(S.isAdmin?"":""));
+  if(w)h+='<div><button type="button" data-act="ics"'+at+'>Agregar al calendario</button></div>';
+  if(S.isAdmin){
+    var val=S.FD[key]!=null?S.FD[key]:(w?toLocalInput(w):"");
+    h+='<div class="grid2"><input type="datetime-local" data-fxd="'+esc(key)+'" value="'+esc(val)+'" aria-label="Día y hora"><button type="button" data-act="savefxd"'+at+' data-k="'+esc(key)+'">Guardar día y hora</button></div>'+
+      '<div><button type="button" data-act="avisofx"'+at+'>Avisar el fixture en Discord</button></div>';
+  }
+  return h+'</div>';
+}
+function saveFxDate(round,stage){
+  var key=stage?"s:"+stage:"r:"+round,v=S.FD[key],list=(S.fx||[]).filter(function(f){return (f.mode||"x5")===S.mode&&(stage?f.stage===stage:(!f.stage&&+f.round===round))});
+  if(v==null)v=fxWhen(list)?toLocalInput(fxWhen(list)):"";
+  S.fmsg="Guardando…";render();
+  api.rpc("set_fixture_date",{code:S.code,p_mode:S.mode,p_round:round||null,p_stage:stage||null,p_when:v?new Date(v).toISOString():null})
+    .then(function(){S.fmsg="Día y hora guardados.";delete S.FD[key];return loadAll(true)}).then(render)
+    .catch(function(e){S.fmsg="No se pudo guardar ("+((e&&e.message)||"error")+"). ¿Corriste fechas.sql en Supabase?";render()});
+}
+function avisoFx(round,stage){
+  S.fmsg="Enviando a Discord…";render();
+  fetch(CFG.url+"/functions/v1/fixture-aviso",{method:"POST",headers:api.h(),body:JSON.stringify({code:S.code,mode:S.mode,round:round||null,stage:stage||null})})
+    .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(j.error||("error "+r.status));return j})})
+    .then(function(){S.fmsg="Aviso enviado a Discord.";render()})
+    .catch(function(e){S.fmsg="No se pudo avisar ("+((e&&e.message)||"error")+"). ¿Subiste la función fixture-aviso?";render()});
+}
+function icsDate(d){return new Date(d).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"")}
+function icsEsc(t){return String(t).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n")}
+function makeIcs(md,round,stage){
+  var list=(S.fx||[]).filter(function(f){return (f.mode||"x5")===md&&f.kickoff&&(round||stage?(stage?f.stage===stage:(!f.stage&&+f.round===round)):true)});
+  if(!list.length){S.fmsg="Todavía no hay día y hora cargados.";render();return}
+  var L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//LTF//Fixture//ES","CALSCALE:GREGORIAN","X-WR-CALNAME:LTF "+md];
+  list.forEach(function(f){
+    var a=fxTeam(f.t1),b=fxTeam(f.t2),st=new Date(f.kickoff),en=new Date(st.getTime()+3600000);
+    L.push("BEGIN:VEVENT","UID:"+f.id+"@ltf","DTSTAMP:"+icsDate(new Date()),"DTSTART:"+icsDate(st),"DTEND:"+icsDate(en),
+      "SUMMARY:"+icsEsc(a.name+" vs "+b.name),"DESCRIPTION:"+icsEsc("LTF "+md+" · "+(f.stage||("Fecha "+f.round))),"END:VEVENT");
+  });
+  L.push("END:VCALENDAR");
+  var blob=new Blob([L.join("\r\n")],{type:"text/calendar;charset=utf-8"}),u=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=u;a.download="ltf-"+md+(round?"-fecha"+round:"")+".ics";document.body.appendChild(a);a.click();
+  setTimeout(function(){a.remove();URL.revokeObjectURL(u)},2000);
 }
 function addFx(){
   var X=S.FX;
@@ -1362,8 +1590,66 @@ function vPartidos(){
 function vGoleadores(){
   var r=scorers(S.mode);
   if(!r.length)return empty("Todavía no hay goles","Los goleadores salen de los partidos guardados.");
-  var h='<div class="panel"><h2>Goleadores · '+S.mode+'</h2><div class="scroll"><table><thead><tr><th>#</th><th class="tm">Jugador</th><th class="tm">Equipo</th><th>Goles</th></tr></thead><tbody>';
-  r.forEach(function(x,i){var t=teamById(x.tid)||{name:x.tn||"",color:"#6b7a72",logo:""};h+='<tr><td class="pos">'+(i+1)+'</td><td class="tm">'+esc(x.name)+'</td><td class="tm"><span class="cell">'+mini(t)+'<span>'+tlink(t)+'</span></span></td><td class="pts">'+x.n+'</td></tr>'});
+  var h=badgesHTML(S.mode)+'<div class="panel"><h2>Goleadores · '+S.mode+'</h2><div class="scroll"><table><thead><tr><th>#</th><th class="tm">Jugador</th><th class="tm">Equipo</th><th>Goles</th></tr></thead><tbody>';
+  r.forEach(function(x,i){var t=teamById(x.tid)||{name:x.tn||"",color:"#6b7a72",logo:""};h+='<tr><td class="pos">'+(i+1)+'</td><td class="tm">'+pLink(x.name)+'</td><td class="tm"><span class="cell">'+mini(t)+'<span>'+tlink(t)+'</span></span></td><td class="pts">'+x.n+'</td></tr>'});
+  return h+'</tbody></table></div></div>';
+}
+
+/* =====================================================================
+   Figuras de la fecha y perfil de jugador
+   ===================================================================== */
+function plOf(m){return m&&m.meta&&m.meta.pl&&m.meta.pl.length?m.meta.pl:null}
+function matchTeam(m,tm){return teamById(tm===1?m.t1:m.t2)||{name:(tm===1?m.n1:m.n2)||"",color:"#6b7a72",logo:""}}
+function pLink(n){return '<a class="plink" href="#'+S.mode+'-jugador-'+encodeURIComponent(n)+'">'+esc(n)+'</a>'}
+function vFiguras(){
+  var ms=modeMatches(S.mode).filter(isOff).filter(function(m){return +m.round>0});
+  if(!ms.length)return empty("Todavía no hay fechas","Las figuras salen de los partidos oficiales que se subieron con número de fecha.");
+  var rs=[];ms.forEach(function(m){if(rs.indexOf(+m.round)<0)rs.push(+m.round)});rs.sort(function(a,b){return b-a});
+  var cur=rs.indexOf(+S.fr)>=0?+S.fr:rs[0];
+  var chips='<div class="pfbar">'+rs.map(function(r){return '<button type="button" class="pfchip'+(r===cur?" on":"")+'" data-act="fround" data-v="'+r+'">Fecha '+r+'</button>'}).join("")+'</div>';
+  var best={},full=false;
+  ms.filter(function(m){return +m.round===cur}).forEach(function(m){
+    var pl=plOf(m);
+    if(pl){pl.forEach(function(p){
+      if(p.r==null)return;full=true;var k=String(p.n).toLowerCase();
+      var x={n:p.n,r:p.r,g:p.g||0,a:p.a||0,t:matchTeam(m,p.tm),mid:m.id};
+      if(!best[k]||x.r>best[k].r||(x.r===best[k].r&&x.g+x.a>best[k].g+best[k].a))best[k]=x;
+    })}else if(m.meta&&m.meta.mvp&&m.meta.mvp.n){
+      var v=m.meta.mvp,k2=String(v.n).toLowerCase();
+      if(!best[k2])best[k2]={n:v.n,r:v.r==null?0:v.r,g:0,a:0,t:matchTeam(m,v.tm),mid:m.id,mvp:true};
+    }
+  });
+  var list=Object.keys(best).map(function(k){return best[k]}).sort(function(a,b){return b.r-a.r||(b.g+b.a)-(a.g+a.a)});
+  if(!list.length)return chips+empty("Sin datos en la fecha "+cur,"Los partidos de esta fecha se subieron antes de que se guardaran los ratings. Con los nuevos replays van a aparecer.");
+  var top=list[0],N=S.mode==="x7"?7:5,team=list.slice(0,N);
+  var h=chips+'<div class="panel fig-top"><h2>Jugador de la fecha '+cur+'</h2><div class="figrow"><span class="cell">'+mini(top.t)+'<span><b class="figname">'+pLink(top.n)+'</b><br><small>'+esc(top.t.name)+'</small></span></span><span class="figr">'+pill(top.r)+'</span></div>'+
+    '<p class="note" style="margin:8px 0 0">'+(top.mvp?'MVP del partido':top.g+' gol'+(top.g===1?"":"es")+' · '+top.a+' asistencia'+(top.a===1?"":"s"))+' · <a href="#partido-'+top.mid+'">ver replay</a></p></div>';
+  h+='<div class="panel"><h2>Equipo de la fecha '+cur+'</h2>'+(full?"":'<p class="note" style="margin:0 0 8px">Hay partidos de esta fecha sin ratings guardados; se muestran los MVP disponibles.</p>')+'<div class="scroll"><table><thead><tr><th>#</th><th class="tm">Jugador</th><th class="tm">Equipo</th><th>Rating</th></tr></thead><tbody>';
+  team.forEach(function(x,i){h+='<tr><td class="pos">'+(i+1)+'</td><td class="tm">'+pLink(x.n)+'</td><td class="tm"><span class="cell figteam">'+mini(x.t)+'<span>'+esc(x.t.name)+'</span></span></td><td class="pts">'+pill(x.r)+'</td></tr>'});
+  return h+'</tbody></table></div></div>';
+}
+function vJugador(){
+  var name=S.pname||"",key=name.toLowerCase(),rows=[],goals=0,ast=0,rs=[],team=null;
+  modeMatches(S.mode).filter(isOff).forEach(function(m){
+    var me=null,gc=0;
+    (plOf(m)||[]).forEach(function(p){if(String(p.n).toLowerCase()===key)me=p});
+    [[m.g1,1],[m.g2,2]].forEach(function(x){(x[0]||[]).forEach(function(l){
+      if(/\(AG\)/i.test(l))return;
+      if(scorerName(l).toLowerCase()===key){gc++;if(!me)team=matchTeam(m,x[1])}
+    })});
+    if(!me&&!gc)return;
+    if(me){team=matchTeam(m,me.tm);ast+=me.a||0;if(me.r!=null)rs.push(me.r)}
+    goals+=gc;
+    rows.push({m:m,g:gc,a:me?(me.a||0):null,r:me?me.r:null});
+  });
+  if(!rows.length)return empty("No encontré a "+(name||"ese jugador"),"Todavía no tiene goles ni partidos oficiales guardados en "+S.mode+".");
+  var avg=rs.length?rs.reduce(function(a,b){return a+b},0)/rs.length:null,bestR=rs.length?Math.max.apply(null,rs):null;
+  var st=function(l,v){return '<div class="pst"><b>'+v+'</b><span>'+l+'</span></div>'};
+  var h='<div class="panel"><div class="figrow"><span class="cell">'+(team?mini(team):"")+'<span><b class="figname">'+esc(name)+'</b><br><small>'+(team?tlink(team):"")+' · '+S.mode+'</small></span></span></div>'+
+    '<div class="pstats">'+st("Partidos",rows.length)+st("Goles",goals)+(rs.length?st("Asistencias",ast)+st("Rating prom.",avg.toFixed(1))+st("Mejor rating",bestR.toFixed(1)):"")+'</div>'+
+    (rs.length?"":'<p class="note" style="margin:10px 0 0">Los ratings y asistencias se guardan desde los replays nuevos; por ahora solo se cuentan los goles.</p>')+'</div>';
+  h+='<div class="panel"><h2>Sus partidos</h2><div class="scroll"><table><thead><tr><th class="tm">Partido</th><th>Goles</th><th>Rating</th></tr></thead><tbody>';
+  rows.forEach(function(x){var m=x.m;h+='<tr><td class="tm"><a href="#partido-'+m.id+'">'+esc(m.title||(sideTeam(m,1).name+" vs "+sideTeam(m,2).name))+'</a><br><small>'+m.s1+'–'+m.s2+(m.round?' · Fecha '+m.round:"")+'</small></td><td class="pts">'+x.g+'</td><td class="pts">'+(x.r==null?"–":pill(x.r))+'</td></tr>'});
   return h+'</tbody></table></div></div>';
 }
 function codeBox(msg){
@@ -2114,7 +2400,9 @@ function saveUpload(){
   up.busy=true;render();
   var title=(up.title||"").trim()||((t1?t1.name:"Rojo")+" vs "+(t2?t2.name:"Azul")+(up.round?" | Fecha "+up.round:""));
   var payload={mode:S.mode||"x5",round:+up.round||null,t1:M.t1||null,t2:M.t2||null,n1:t1?t1.name:"Rojo",n2:t2?t2.name:"Azul",s1:A.s1,s2:A.s2,
-    g1:goalStrings(A,1),g2:goalStrings(A,2),title:title,stats:A,meta:{mvp:A.mvp,dur:A.dur,np:A.players.length,poss:A.poss}};
+    g1:goalStrings(A,1),g2:goalStrings(A,2),title:title,stats:A,meta:{mvp:A.mvp,dur:A.dur,np:A.players.length,poss:A.poss,
+      pl:A.players.map(function(q){return {n:q.n,tm:q.tm,g:q.goals,a:q.ast,r:q.r,m:q.min}}),
+      gl:A.goals.map(function(g){return {n:g.n,f:g.f,t:Math.round(g.t),tm:g.tm,og:g.og?1:0}})}};
   var withReplay=up.buf&&up.buf.byteLength<=2000000;
   if(withReplay)payload.replay=b64enc(up.buf);
   (pub?api.rpc("add_match_open",{p:payload}):api.rpc("add_match",{code:S.code,p:payload})).then(function(id){
@@ -2153,7 +2441,8 @@ function loadReplay(M){
 function parseHash(h){
   var m=h.match(/^partido-([0-9a-f-]{36})$/i);if(m)return {tab:"partido",id:m[1]};
   m=h.match(/^(x5|x7)-equipo-(.+)$/);if(m){var tid="";try{tid=decodeURIComponent(m[2])}catch(e){tid=m[2]}return {tab:"equipo",mode:m[1],teamId:tid}}
-  m=h.match(/^(x5|x7)(?:-(subir|partidos|tabla|fixture|goleadores|plantillas|h2h))?$/);if(m)return {tab:m[2]||"inicio",mode:m[1]};
+  m=h.match(/^(x5|x7)-jugador-(.+)$/);if(m){var pn="";try{pn=decodeURIComponent(m[2])}catch(e){pn=m[2]}return {tab:"jugador",mode:m[1],pname:pn}}
+  m=h.match(/^(x5|x7)(?:-(subir|partidos|tabla|fixture|goleadores|figuras|plantillas|h2h|comparar|votar))?$/);if(m)return {tab:m[2]||"inicio",mode:m[1]};
   if(/^(liga|host3|codigo|equipos|musica)$/.test(h))return {tab:h};
   if(/^(subir|partidos|tabla|goleadores)$/.test(h))return {tab:h,mode:"x5"}; /* links viejos */
   return {tab:"home"};
@@ -2163,6 +2452,7 @@ function route(){
   V.playing=false;killPlayer();S.rmsg="";
   if(P.mode)S.mode=P.mode;
   if(P.teamId!==undefined)S.teamId=P.teamId;
+  if(P.pname!==undefined)S.pname=P.pname;
   if(P.tab==="partido"){
     S.tab="partido";
     if(!S.cur||S.cur.id!==P.id){S.cur=null;if(S.loaded){openMatch(P.id);return}}
@@ -2174,7 +2464,7 @@ function route(){
   render();
   if(location.hash==="#funciones"){var fn=$("funciones");if(fn)fn.scrollIntoView({behavior:"smooth",block:"start"})}
 }
-var MODE_TABS=["inicio","subir","partidos","tabla","fixture","goleadores","plantillas","h2h","equipo"];
+var MODE_TABS=["inicio","subir","partidos","tabla","fixture","goleadores","figuras","plantillas","h2h","comparar","votar","equipo","jugador"];
 function modeCtx(){
   if(S.tab==="partido")return S.cur&&S.cur.mode?mOf(S.cur):S.mode;
   return MODE_TABS.indexOf(S.tab)>=0?S.mode:"";
@@ -2186,10 +2476,11 @@ function backHash(){
   if(t==="liga"||t==="host3"||t==="codigo"||t==="musica")return "home";
   if(t==="equipos"||t==="inicio")return "liga";
   if(t==="equipo")return S.mode+"-tabla";
+  if(t==="jugador")return S.mode+"-goleadores";
   return S.mode;
 }
 function navHTML(){
-  var b=backHash(),md=modeCtx(),act=S.tab==="partido"?"partidos":(S.tab==="equipo"?"tabla":S.tab),h="";
+  var b=backHash(),md=modeCtx(),act=S.tab==="partido"?"partidos":(S.tab==="equipo"?"tabla":(S.tab==="jugador"?"goleadores":S.tab)),h="";
   if(b!==null)h+='<button type="button" class="navback" data-h="'+b+'" aria-label="Volver atrás">← Atrás</button>';
   if(md)MTABS.forEach(function(t){h+='<button type="button" data-h="'+(t[0]==="inicio"?md:md+"-"+t[0])+'"'+(act===t[0]?' aria-current="page"':"")+'>'+t[1]+'</button>'});
   return h;
@@ -2275,7 +2566,7 @@ function render(){
   if(S.err&&!S.loaded){v.innerHTML=empty("No se pudo abrir",S.err);return}
   if(!S.loaded){v.innerHTML=empty("Abriendo la liga…","Un momento.");return}
   CM=null;
-  var f={home:vHome,liga:vLiga,host3:vHost3,codigo:vCodigo,inicio:vInicio,tabla:vTabla,partidos:vPartidos,goleadores:vGoleadores,plantillas:vPlantillas,fixture:vFixture,h2h:vH2H,equipo:vEquipo,subir:vSubir,equipos:vEquipos,musica:vMusica,partido:vPartido}[S.tab]||vHome;
+  var f={home:vHome,liga:vLiga,host3:vHost3,codigo:vCodigo,inicio:vInicio,tabla:vTabla,partidos:vPartidos,goleadores:vGoleadores,figuras:vFiguras,jugador:vJugador,plantillas:vPlantillas,fixture:vFixture,h2h:vH2H,comparar:vComparar,votar:vVotar,equipo:vEquipo,subir:vSubir,equipos:vEquipos,musica:vMusica,partido:vPartido}[S.tab]||vHome;
   v.innerHTML=f();
   if(S.tab==="partido"&&S.cur&&S.mtab==="rep"&&S.cur.A&&!S.cur.rbuf&&!S.cur.rstate)loadReplay(S.cur);
   wireDrop();wireViewer();drawHeat();drawShots();
@@ -2430,14 +2721,15 @@ $("view").addEventListener("click",function(e){
   if(act==="sharecard")shareCard(b);
   if(act==="addaviso"){var at=(S.AV.title||"").trim();if(!at){S.rmsg="Escribí un título para la novedad.";render();return}api.rpc("add_aviso",{code:S.code,p_title:at,p_body:(S.AV.body||"").trim()}).then(function(){S.AV={title:"",body:""};S.rmsg="";return loadAll(true)}).catch(failN)}
   if(act==="delaviso"){if(S.armed!=="a"+id){S.armed="a"+id;render()}else{S.armed="";api.rpc("delete_aviso",{code:S.code,p_id:id}).then(function(){return loadAll(true)}).catch(failN)}}
-  if(act==="addfx")addFx();
+  if(act==="fround"){S.fr=b.dataset.v;render();return}
+  if(act==="addfx")addFx();if(act==="ics"){makeIcs(S.mode,+b.dataset.r||0,b.dataset.s||"");return}if(act==="savefxd"){saveFxDate(+b.dataset.r||0,b.dataset.s||"");return}if(act==="avisofx"){avisoFx(+b.dataset.r||0,b.dataset.s||"");return}if(act==="vote"){castVote(b.dataset.k,b.dataset.ref,b.dataset.c);return}if(act==="genliga"){genLiga(+b.dataset.r);return}if(act==="gencopa"){genCopa(+b.dataset.r);return}if(act==="advcopa"){advCopa(b.dataset.c);return}
   if(act==="delfx"){if(S.armed!=="f"+id){S.armed="f"+id;render()}else{S.armed="";api.rpc("delete_fixture",{code:S.code,p_id:id}).then(function(){return loadAll(true)}).catch(failN)}}
 });
 $("view").addEventListener("input",function(e){
   var u=e.target.dataset.u,ek=e.target.dataset.e;
   if(e.target.dataset.rn!==undefined)S.R[e.target.dataset.rn]=e.target.value;
   if(e.target.dataset.av)S.AV[e.target.dataset.av]=e.target.value;
-  if(e.target.dataset.fx)S.FX[e.target.dataset.fx]=e.target.value;
+  if(e.target.dataset.fx)S.FX[e.target.dataset.fx]=e.target.value;if(e.target.dataset.fxd){S.FD[e.target.dataset.fxd]=e.target.value}if(e.target.dataset.cp){S.CP[e.target.dataset.cp]=e.target.value;render()}if(e.target.dataset.gen)S.GEN[e.target.dataset.gen]=e.target.value;
   if(u==="title"||u==="round"){
     S.up[u]=e.target.value;
     if(u==="title"&&S.up.M){S.up.M.title=e.target.value;var el=document.querySelector(".hero .mt");if(el)el.textContent=e.target.value}
