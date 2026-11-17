@@ -630,6 +630,9 @@ a.tile b{font-weight:600;font-size:17px;line-height:1.2}
 .fxwhen.adm{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
 .fxwhen.adm input{width:auto;max-width:210px;padding:6px 8px;font-size:13px}
 .fxwhen.adm button{padding:6px 12px;font-size:13px}
+
+.dtp{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
+.dtp select,.dtp input{width:auto;padding:6px 8px;font-size:13px}
 </style>
 </head>
 <body>
@@ -665,7 +668,7 @@ var SUBS=[["rep","Ver partido"],["par","Estadísticas"],["res","Alineaciones"],[
 function blankUp(){return {title:"",round:"",t1:"",t2:"",status:"",bad:false,busy:false,M:null,buf:null}}
 var S={user:null,modal:false,authMsg:"",teams:[],matches:[],role:"",code:"",canWrite:false,isAdmin:false,loaded:false,err:"",tab:"home",mode:"x5",roster:[],tm:null,R:{},rmsg:"",part:0,ssel:-1,
   cur:null,curMsg:"",mtab:"rep",sort:{k:"r",d:-1},pf:0,pr:0,sf:0,heat:"t1",up:blankUp(),E:{id:"",name:"",color:"#2f66c9",logo:""},
-  armed:"",banner:"",sig:"",busyTeam:false,fx:null,av:null,H:{a:"",b:""},FX:{round:"",stage:"",t1:"",t2:""},GEN:{a:"",b:"",sc:6},CP:{a:"",b:""},FD:{},fmsg:"",vp:undefined,vg:undefined,AV:{title:"",body:""}};
+  armed:"",banner:"",sig:"",busyTeam:false,fx:null,av:null,H:{a:"",b:""},FX:{round:"",stage:"",t1:"",t2:""},GEN:{a:"",b:"",sc:6},CP:{a:"",b:""},FD:{},FP:{},fmsg:"",vp:undefined,vg:undefined,AV:{title:"",body:""}};
 var CM=null; // partido que se está dibujando ahora (vista previa o guardado)
 
 /* =====================================================================
@@ -1335,15 +1338,15 @@ function fmtShort(iso){try{return new Date(iso).toLocaleString("es-AR",{weekday:
 function fxWhenRow(f){
   var key="m:"+f.id;
   if(!S.isAdmin)return f.kickoff?'<div class="fxwhen">🕒 '+esc(fmtShort(f.kickoff))+'</div>':"";
-  var val=S.FD[key]!=null?S.FD[key]:(f.kickoff?toLocalInput(f.kickoff):"");
-  return '<div class="fxwhen adm"><span>🕒</span><input type="datetime-local" data-fxd="'+esc(key)+'" value="'+esc(val)+'" aria-label="Día y hora de este partido"><button type="button" data-act="savematch" data-id="'+esc(f.id)+'">Guardar hora</button></div>';
+  return '<div class="fxwhen adm"><span>🕒</span>'+dtInput(key,f.kickoff,"Día y hora de este partido")+'<button type="button" data-act="savematch" data-id="'+esc(f.id)+'">Guardar hora</button></div>';
 }
 function saveMatchDate(id){
   var key="m:"+id,f=(S.fx||[]).filter(function(x){return String(x.id)===String(id)})[0],v=S.FD[key];
   if(v==null)v=f&&f.kickoff?toLocalInput(f.kickoff):"";
+  var er=dtCheck(v);if(er){S.fmsg=er;render();return}
   S.fmsg="Guardando…";render();
   api.rpc("set_match_date",{code:S.code,p_id:id,p_when:v?new Date(v).toISOString():null})
-    .then(function(){S.fmsg=v?"Hora del partido guardada.":"Hora del partido borrada.";delete S.FD[key];return loadAll(true)}).then(render)
+    .then(function(){S.fmsg=v?"Hora del partido guardada.":"Hora del partido borrada.";delete S.FD[key];delete S.FP[key];return loadAll(true)}).then(render)
     .catch(function(e){S.fmsg="No se pudo guardar ("+((e&&e.message)||"error")+"). ¿Corriste horas.sql en Supabase?";render()});
 }
 function vFixture(){
@@ -1573,6 +1576,37 @@ function vVotar(){
   return h+'</div>';
 }
 /* ---- Calendario: fecha y hora de cada fecha (la pone el admin a mano), .ics para el celular, aviso a Discord ---- */
+/* ---- Día, mes y hora (el año se pone solo) ---- */
+var MESES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+function dtParts(key,iso){
+  if(S.FP[key])return S.FP[key];
+  if(iso){var d=new Date(iso);return {y:d.getFullYear(),d:d.getDate(),m:d.getMonth()+1,t:("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)}}
+  return {y:new Date().getFullYear(),d:0,m:0,t:""};
+}
+function dtInput(key,iso,label){
+  var p=dtParts(key,iso),i,ds='<option value="">Día</option>',ms='<option value="">Mes</option>';
+  for(i=1;i<=31;i++)ds+='<option value="'+i+'"'+(p.d===i?" selected":"")+'>'+i+'</option>';
+  for(i=1;i<=12;i++)ms+='<option value="'+i+'"'+(p.m===i?" selected":"")+'>'+MESES[i-1]+'</option>';
+  var k=esc(key);
+  return '<span class="dtp" role="group" aria-label="'+esc(label||"Día y hora")+'"><select data-fxp="'+k+'" data-part="d" aria-label="Día">'+ds+'</select><select data-fxp="'+k+'" data-part="m" aria-label="Mes">'+ms+'</select><input type="time" data-fxp="'+k+'" data-part="t" value="'+esc(p.t)+'" aria-label="Hora"></span>';
+}
+function fxPart(key,part,val){
+  var cur=S.FP[key]||{y:new Date().getFullYear(),d:0,m:0,t:""};
+  var n={y:cur.y,d:cur.d,m:cur.m,t:cur.t};
+  if(part==="d")n.d=+val||0;else if(part==="m")n.m=+val||0;else n.t=val||"";
+  S.FP[key]=n;
+  var pad=function(x){return ("0"+x).slice(-2)};
+  if(!n.d&&!n.m&&!n.t)S.FD[key]="";
+  else if(n.d&&n.m&&n.t)S.FD[key]=n.y+"-"+pad(n.m)+"-"+pad(n.d)+"T"+n.t;
+  else S.FD[key]="__partial";
+}
+function dtCheck(v){
+  if(v==="__partial")return "Completá día, mes y hora (o dejá los tres vacíos para borrar).";
+  if(!v)return "";
+  var m=v.match(/^(\d{4})-(\d\d)-(\d\d)T/),d=new Date(v);
+  if(!m||isNaN(d)||d.getDate()!==+m[3]||d.getMonth()+1!==+m[2])return "Esa fecha no existe (revisá el día y el mes).";
+  return "";
+}
 function fxWhen(arr){var w=null;arr.forEach(function(f){if(f.kickoff&&!w)w=f.kickoff});return w}
 function fmtWhen(iso){try{return new Date(iso).toLocaleString("es-AR",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"})}catch(e){return iso}}
 function toLocalInput(iso){var d=new Date(iso);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
@@ -1582,8 +1616,7 @@ function fxBar(arr,md,round,stage){
   var h='<div class="stack" style="margin:0 0 10px">'+(w?'<p class="note" style="margin:0">'+(same?'📅 '+esc(fmtWhen(w)):'📅 Cada partido tiene su horario')+'</p>':"");
   if(w)h+='<div><button type="button" data-act="ics"'+at+'>Agregar al calendario</button></div>';
   if(S.isAdmin){
-    var val=S.FD[key]!=null?S.FD[key]:(w?toLocalInput(w):"");
-    h+='<div class="grid2"><input type="datetime-local" data-fxd="'+esc(key)+'" value="'+esc(val)+'" aria-label="Día y hora"><button type="button" data-act="savefxd"'+at+' data-k="'+esc(key)+'" title="Pone el mismo día y hora a todos los partidos de esta fecha">Misma hora para todos</button></div>'+
+    h+='<div class="grid2">'+dtInput(key,w,"Día y hora para toda la fecha")+'<button type="button" data-act="savefxd"'+at+' data-k="'+esc(key)+'" title="Pone el mismo día y hora a todos los partidos de esta fecha">Misma hora para todos</button></div>'+
       '<div><button type="button" data-act="avisofx"'+at+'>Avisar el fixture en Discord</button></div>';
   }
   return h+'</div>';
@@ -1591,9 +1624,10 @@ function fxBar(arr,md,round,stage){
 function saveFxDate(round,stage){
   var key=stage?"s:"+stage:"r:"+round,v=S.FD[key],list=(S.fx||[]).filter(function(f){return (f.mode||"x5")===S.mode&&(stage?f.stage===stage:(!f.stage&&+f.round===round))});
   if(v==null)v=fxWhen(list)?toLocalInput(fxWhen(list)):"";
+  var er=dtCheck(v);if(er){S.fmsg=er;render();return}
   S.fmsg="Guardando…";render();
   api.rpc("set_fixture_date",{code:S.code,p_mode:S.mode,p_round:round||null,p_stage:stage||null,p_when:v?new Date(v).toISOString():null})
-    .then(function(){S.fmsg="Día y hora puestos en todos los partidos de la fecha.";delete S.FD[key];return loadAll(true)}).then(render)
+    .then(function(){S.fmsg="Día y hora puestos en todos los partidos de la fecha.";delete S.FD[key];delete S.FP[key];return loadAll(true)}).then(render)
     .catch(function(e){S.fmsg="No se pudo guardar ("+((e&&e.message)||"error")+"). ¿Corriste fechas.sql en Supabase?";render()});
 }
 function avisoFx(round,stage){
@@ -2840,7 +2874,7 @@ $("view").addEventListener("input",function(e){
   var u=e.target.dataset.u,ek=e.target.dataset.e;
   if(e.target.dataset.rn!==undefined)S.R[e.target.dataset.rn]=e.target.value;
   if(e.target.dataset.av)S.AV[e.target.dataset.av]=e.target.value;
-  if(e.target.dataset.fx)S.FX[e.target.dataset.fx]=e.target.value;if(e.target.dataset.fxd){S.FD[e.target.dataset.fxd]=e.target.value}if(e.target.dataset.cp){S.CP[e.target.dataset.cp]=e.target.value;render()}if(e.target.dataset.gen)S.GEN[e.target.dataset.gen]=e.target.value;
+  if(e.target.dataset.fx)S.FX[e.target.dataset.fx]=e.target.value;if(e.target.dataset.fxp){fxPart(e.target.dataset.fxp,e.target.dataset.part,e.target.value)}if(e.target.dataset.cp){S.CP[e.target.dataset.cp]=e.target.value;render()}if(e.target.dataset.gen)S.GEN[e.target.dataset.gen]=e.target.value;
   if(u==="title"||u==="round"){
     S.up[u]=e.target.value;
     if(u==="title"&&S.up.M){S.up.M.title=e.target.value;var el=document.querySelector(".hero .mt");if(el)el.textContent=e.target.value}
