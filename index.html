@@ -1493,9 +1493,23 @@ function fxBar(arr,md,round,stage){
   if(w)h+='<div><button type="button" data-act="ics"'+at+'>Agregar al calendario</button></div>';
   if(S.isAdmin){
     h+='<div class="grid2">'+dtInput(key,w,"Día y hora para toda la fecha")+'<button type="button" data-act="savefxd"'+at+' data-k="'+esc(key)+'" title="Pone el mismo día y hora a todos los partidos de esta fecha">Misma hora para todos</button></div>'+
-      '<div><button type="button" data-act="avisofx"'+at+'>Avisar el fixture en Discord</button></div>';
+      '<div class="grid2"><button type="button" data-act="avisofx"'+at+'>Avisar el fixture en Discord</button><button type="button" class="danger" data-act="delround"'+at+' data-k="'+esc(key)+'" title="Borra todos los partidos programados de esta fecha">'+(S.armed==="fr"+key?"¿Seguro? Borrar "+arr.length+(arr.length===1?" partido":" partidos"):"🗑 Borrar "+(stage?esc(stage):"fecha "+round))+'</button></div>';
   }
   return h+'</div>';
+}
+function delRound(round,stage,key){
+  if(S.armed!=="fr"+key){S.armed="fr"+key;render();return}
+  S.armed="";
+  var list=(S.fx||[]).filter(function(f){return (f.mode||"x5")===S.mode&&(stage?f.stage===stage:(!f.stage&&+f.round===round))});
+  if(!list.length){render();return}
+  S.fmsg="Borrando "+list.length+(list.length===1?" partido…":" partidos…");render();
+  var i=0;
+  (function next(){
+    if(i>=list.length)return Promise.resolve();
+    var f=list[i++];
+    return api.rpc("delete_fixture",{code:S.code,p_id:f.id}).then(next);
+  })().then(function(){S.fmsg=(stage?stage:"Fecha "+round)+" borrada ("+list.length+(list.length===1?" partido).":" partidos).");delete S.FD[key];delete S.FP[key];return loadAll(true)}).then(render)
+  .catch(function(e){S.fmsg="No se pudo borrar toda la fecha ("+((e&&e.message)||"error")+"). Probá de nuevo.";loadAll(true).then(render,render)});
 }
 function saveFxDate(round,stage){
   var key=stage?"s:"+stage:"r:"+round,v=S.FD[key],list=(S.fx||[]).filter(function(f){return (f.mode||"x5")===S.mode&&(stage?f.stage===stage:(!f.stage&&+f.round===round))});
@@ -2712,7 +2726,7 @@ $("view").addEventListener("click",function(e){
   if(act==="delaviso"){if(S.armed!=="a"+id){S.armed="a"+id;render()}else{S.armed="";api.rpc("delete_aviso",{code:S.code,p_id:id}).then(function(){return loadAll(true)}).catch(failN)}}
   if(act==="fround"){S.fr=b.dataset.v;render();return}
   if(act==="jtab"){S.jt=b.dataset.v;render();return}
-  if(act==="addfx")addFx();if(act==="savematch"){saveMatchDate(b.dataset.id);return}if(act==="ics"){makeIcs(S.mode,+b.dataset.r||0,b.dataset.s||"");return}if(act==="savefxd"){saveFxDate(+b.dataset.r||0,b.dataset.s||"");return}if(act==="avisofx"){avisoFx(+b.dataset.r||0,b.dataset.s||"");return}if(act==="genliga"){genLiga(+b.dataset.r);return}if(act==="gencopa"){genCopa(+b.dataset.r);return}if(act==="advcopa"){advCopa(b.dataset.c);return}
+  if(act==="addfx")addFx();if(act==="savematch"){saveMatchDate(b.dataset.id);return}if(act==="ics"){makeIcs(S.mode,+b.dataset.r||0,b.dataset.s||"");return}if(act==="delround"){delRound(+b.dataset.r||0,b.dataset.s||"",b.dataset.k||"");return}if(act==="savefxd"){saveFxDate(+b.dataset.r||0,b.dataset.s||"");return}if(act==="avisofx"){avisoFx(+b.dataset.r||0,b.dataset.s||"");return}if(act==="genliga"){genLiga(+b.dataset.r);return}if(act==="gencopa"){genCopa(+b.dataset.r);return}if(act==="advcopa"){advCopa(b.dataset.c);return}
   if(act==="delfx"){if(S.armed!=="f"+id){S.armed="f"+id;render()}else{S.armed="";api.rpc("delete_fixture",{code:S.code,p_id:id}).then(function(){return loadAll(true)}).catch(failN)}}
 });
 $("view").addEventListener("input",function(e){
