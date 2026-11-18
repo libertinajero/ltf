@@ -619,7 +619,7 @@ function css(n){return getComputedStyle(document.documentElement).getPropertyVal
 /* =====================================================================
    Estado
    ===================================================================== */
-var MTABS=[["partidos","Replays"],["tabla","Tabla"],["fixture","Fixture"],["jugadores","Jugadores"],["comparar","Comparar"]];
+var MTABS=[["partidos","Replays"],["tabla","Tabla"],["fixture","Fixture"],["jugadores","Jugadores"]];
 var MODES=["x5","x7"];
 var DISCORD_URL="https://discord.gg/BT5DZNH2Te"; /* pegá acá el link de invitación del Discord (o ponelo en config.js como discord:"https://...") */
 var SUBS=[["rep","Ver partido"],["par","Resumen"],["jug","Jugadores"],["gol","Goles"],["cal","Mapas de calor"]];
@@ -1543,9 +1543,9 @@ function vPartidos(){
     (ms.length?'<div class="mlist">'+ms.map(mcard).join("")+'</div>':empty("No hay replays en este filtro","Probá con otro."));
 }
 function vJugadores(){
-  var jt=S.jt==="fig"?"fig":"gol";
-  var tg='<nav class="sub2" aria-label="Jugadores" style="justify-content:center">'+[["gol","Goleadores"],["fig","Figuras"]].map(function(x){return '<button type="button" data-act="jtab" data-v="'+x[0]+'"'+(jt===x[0]?' aria-current="page"':"")+'>'+x[1]+'</button>'}).join("")+'</nav>';
-  return tg+(jt==="fig"?vFiguras():vGoleadores());
+  var jt=S.jt==="fig"||S.jt==="cmp"?S.jt:"gol";
+  var tg='<nav class="sub2" aria-label="Jugadores" style="justify-content:center">'+[["gol","Goleadores"],["fig","Figuras"],["cmp","Comparar"]].map(function(x){return '<button type="button" data-act="jtab" data-v="'+x[0]+'"'+(jt===x[0]?' aria-current="page"':"")+'>'+x[1]+'</button>'}).join("")+'</nav>';
+  return tg+(jt==="fig"?vFiguras():jt==="cmp"?vComparar():vGoleadores());
 }
 function vGoleadores(){
   var r=scorers(S.mode);
@@ -2381,6 +2381,7 @@ function parseHash(h){
     /* links viejos: goleadores y figuras ahora son una sola pestaña; cara a cara, votar e inicio ya no existen */
     if(k==="goleadores")return {tab:"jugadores",mode:m[1],jt:"gol"};
     if(k==="figuras")return {tab:"jugadores",mode:m[1],jt:"fig"};
+    if(k==="comparar")return {tab:"jugadores",mode:m[1],jt:"cmp"};
     if(k==="h2h"||k==="votar"||k==="inicio")k="tabla";
     return {tab:k,mode:m[1]};
   }
@@ -2406,7 +2407,7 @@ function route(){
   }
   render();
 }
-var MODE_TABS=["subir","partidos","tabla","fixture","jugadores","plantillas","comparar","equipo","jugador"];
+var MODE_TABS=["subir","partidos","tabla","fixture","jugadores","plantillas","equipo","jugador"];
 function modeCtx(){
   if(S.tab==="partido")return S.cur&&S.cur.mode?mOf(S.cur):S.mode;
   return MODE_TABS.indexOf(S.tab)>=0?S.mode:"";
@@ -2511,7 +2512,7 @@ function render(){
   if(S.err&&!S.loaded){v.innerHTML=empty("No se pudo abrir",S.err);return}
   if(!S.loaded){v.innerHTML=empty("Abriendo la liga…","Un momento.");return}
   CM=null;
-  var f={home:vHome,codigo:vCodigo,tabla:vTabla,partidos:vPartidos,jugadores:vJugadores,jugador:vJugador,plantillas:vPlantillas,fixture:vFixture,comparar:vComparar,equipo:vEquipo,subir:vSubir,equipos:vEquipos,musica:vMusica,partido:vPartido}[S.tab]||vHome;
+  var f={home:vHome,codigo:vCodigo,tabla:vTabla,partidos:vPartidos,jugadores:vJugadores,jugador:vJugador,plantillas:vPlantillas,fixture:vFixture,equipo:vEquipo,subir:vSubir,equipos:vEquipos,musica:vMusica,partido:vPartido}[S.tab]||vHome;
   v.innerHTML=f();
   if(S.tab==="partido"&&S.cur&&S.mtab==="rep"&&S.cur.A&&!S.cur.rbuf&&!S.cur.rstate)loadReplay(S.cur);
   wireDrop();wireViewer();drawHeat();drawShots();
