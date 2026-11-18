@@ -1309,20 +1309,36 @@ function vFixture(){
   return h;
 }
 /* ---- Generador automático: todos contra todos (solo ida), 2 rondas, Copa Apertura / Clausura ---- */
-function rrRounds(ids,scA,scB,scRound){
-  var t=ids.slice();if(t.length%2)t.push(null);
-  var n=t.length,R=[],i,k;
+/* Clásicos del fútbol argentino: la fecha elegida (por defecto la 6) los juega todos */
+var CLASICOS=[["boca","river","Superclásico"],["racing","independiente","Clásico de Avellaneda"],["newell","rosario central","Clásico rosarino"],["estudiantes","gimnasia","Clásico platense"],["belgrano","talleres","Clásico cordobés"],["huracan","san lorenzo","Clásico Boedo–Parque Patricios"]];
+function normN(x){return String(x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
+function clasicoPairs(ts){
+  var out=[];
+  CLASICOS.forEach(function(c){
+    var A=ts.filter(function(t){return normN(t.name).indexOf(c[0])>=0})[0],B=ts.filter(function(t){return normN(t.name).indexOf(c[1])>=0})[0];
+    if(A&&B&&A!==B)out.push([String(A.id),String(B.id)]);
+  });
+  return out;
+}
+function rrRounds(ids,pairs,scRound){
+  pairs=pairs||[];
+  var used={},rest=[],n0=ids.length%2?ids.length+1:ids.length,t=new Array(n0),i,k;
+  for(i=0;i<n0;i++)t[i]=undefined;
+  /* los clásicos van enfrentados en la ronda 0 del método del círculo (t[i] vs t[n-1-i]) */
+  pairs.forEach(function(p,j){t[j]=p[0];t[n0-1-j]=p[1];used[p[0]]=1;used[p[1]]=1});
+  ids.forEach(function(x){if(!used[x])rest.push(x)});
+  for(i=0;i<n0;i++){if(t[i]===undefined)t[i]=rest.length?rest.shift():null}
+  var n=n0,R=[];
   for(k=0;k<n-1;k++){
     var r=[];
     for(i=0;i<n/2;i++){var a=t[i],b=t[n-1-i];if(a!=null&&b!=null)r.push(k%2?[b,a]:[a,b])}
     R.push(r);
     t.splice(1,0,t.pop());
   }
-  /* el superclásico se mueve a la fecha pedida (el orden de las fechas es libre) */
-  if(scA&&scB&&scA!==scB){
-    var at=-1;R.forEach(function(r,j){r.forEach(function(p){if((p[0]===scA&&p[1]===scB)||(p[0]===scB&&p[1]===scA))at=j})});
+  /* la ronda de clásicos (la 0) pasa a la fecha pedida; las demás se corren sin repetir cruces */
+  if(pairs.length){
     var to=Math.min(Math.max(scRound,1),R.length)-1;
-    if(at>=0&&at!==to){var tmp=R[at];R[at]=R[to];R[to]=tmp}
+    if(to>0){var first=R.shift();R.splice(to,0,first)}
   }
   return R;
 }
@@ -1341,7 +1357,7 @@ function genLiga(ronda){
   var ids=ts.map(function(t){return String(t.id)}).sort(),N=ids.length%2?ids.length+1:ids.length,F=N-1,off=(ronda-1)*F;
   var dup=(S.fx||[]).some(function(f){return (f.mode||"x5")===md&&!f.stage&&f.round!=null&&+f.round>off&&+f.round<=off+F});
   if(dup){S.rmsg="Ya hay fechas cargadas en la ronda "+ronda+" (fechas "+(off+1)+" a "+(off+F)+"). Borralas primero si querés generar de nuevo.";render();return}
-  var R=rrRounds(ids,G.a&&String(G.a),G.b&&String(G.b),+G.sc||6),list=[];
+  var R=rrRounds(ids,clasicoPairs(ts),+G.sc||6),list=[];
   R.forEach(function(r,j){r.forEach(function(p){list.push({round:off+j+1,t1:p[0],t2:p[1]})})});
   fxChain(list,"Listo: ronda "+ronda+" generada ("+F+" fechas, "+list.length+" partidos).");
 }
@@ -1375,8 +1391,8 @@ function advCopa(c){
 function genPanel(md,ts,op){
   var G=S.GEN,sel=function(k){return '<select data-gen="'+k+'">'+op(G[k])+'</select>'},F=(ts.length%2?ts.length+1:ts.length)-1;
   var h='<div class="panel"><h2>Generar fechas · '+md+'</h2><div class="stack"><p class="note" style="margin:0">Todos contra todos, solo ida: '+ts.length+' equipos = '+F+' fechas por ronda. Después de cada ronda, los 8 primeros pasan a la copa (Apertura tras la ronda 1, Clausura tras la ronda 2).</p>'+
-    '<div class="grid2"><div><label>Superclásico: equipo 1</label>'+sel("a")+'</div><div><label>Superclásico: equipo 2</label>'+sel("b")+'</div></div>'+
-    '<div><label for="gsc">Fecha del superclásico</label><input id="gsc" type="number" min="1" max="'+F+'" data-gen="sc" value="'+esc(G.sc)+'"></div>'+
+    '<p class="note" style="margin:0">Fecha de clásicos: '+(function(){var P=clasicoPairs(ts);return P.length?P.map(function(p){var a=ts.filter(function(t){return String(t.id)===p[0]})[0],b=ts.filter(function(t){return String(t.id)===p[1]})[0];return esc((a&&a.name)||p[0])+' vs '+esc((b&&b.name)||p[1])}).join(' · '):'no se detectaron clásicos entre los equipos cargados.'})()+'</p>'+
+    '<div><label for="gsc">Fecha de los clásicos</label><input id="gsc" type="number" min="1" max="'+F+'" data-gen="sc" value="'+esc(G.sc)+'"></div>'+
     '<div class="grid2"><button type="button" class="primary" data-act="genliga" data-r="1"'+(S.busy?" disabled":"")+'>Generar ronda 1 (fechas 1–'+F+')</button><button type="button" class="primary" data-act="genliga" data-r="2"'+(S.busy?" disabled":"")+'>Generar ronda 2 (fechas '+(F+1)+'–'+2*F+')</button></div>'+
     '<div class="grid2"><button type="button" data-act="gencopa" data-r="1"'+(S.busy?" disabled":"")+'>Copa Apertura: cuartos</button><button type="button" data-act="gencopa" data-r="2"'+(S.busy?" disabled":"")+'>Copa Clausura: cuartos</button></div>'+
     '<div class="grid2"><button type="button" data-act="advcopa" data-c="Apertura"'+(S.busy?" disabled":"")+'>Apertura: siguiente fase</button><button type="button" data-act="advcopa" data-c="Clausura"'+(S.busy?" disabled":"")+'>Clausura: siguiente fase</button></div>'+
@@ -2330,7 +2346,7 @@ function saveUpload(){
   var withReplay=up.buf&&up.buf.byteLength<=2000000;
   if(withReplay)payload.replay=b64enc(up.buf);
   (pub?api.rpc("add_match_open",{p:payload}):api.rpc("add_match",{code:S.code,p:payload})).then(function(id){
-    postCard(Object.assign({},M,{id:id,title:title}),id);if(up.file)api.rpc("link_match_roster",{p_match:id,p_file:up.file}).catch(function(){});S.up=blankUp();S.banner="saved";
+    postCard(Object.assign({},M,{id:id,title:title,round:+up.round||null,created_at:new Date().toISOString()}),id);if(up.file)api.rpc("link_match_roster",{p_match:id,p_file:up.file}).catch(function(){});S.up=blankUp();S.banner="saved";
     return loadAll(true).then(function(){location.hash="partido-"+id});
   }).catch(function(err){
     up.busy=false;up.bad=true;
@@ -2546,41 +2562,78 @@ function loadImg(src){return new Promise(function(ok){if(!src)return ok(null);va
 /* Tarjeta del resultado como imagen (1200x630): se copia al portapapeles para pegarla en Discord, o se descarga */
 /* Dibuja la tarjeta 1200x630 y devuelve el PNG (se usa para compartir y para el aviso de Discord) */
 function cardBlob(M){
-  var A=M.A,a=sideTeam(M,1),b=sideTeam(M,2),FF="'Outfit',system-ui,Arial,sans-serif";
-  return Promise.all([loadImg(a.logo),loadImg(b.logo),(document.fonts&&document.fonts.load)?document.fonts.load("700 40px 'Outfit'").catch(function(){}):0]).then(function(r){
-    var W=1200,H=630,c=document.createElement("canvas");c.width=W;c.height=H;
+  var A=M.A,a=sideTeam(M,1),b=sideTeam(M,2),FF="'Outfit',system-ui,Arial,sans-serif",CEL="#74acdf",GOLD="#f5c542";
+  return Promise.all([loadImg(a.logo),loadImg(b.logo),(document.fonts&&document.fonts.load)?Promise.all([document.fonts.load("700 40px 'Outfit'"),document.fonts.load("800 40px 'Outfit'")]).catch(function(){}):0]).then(function(r){
+    var W=1200,H=720,c=document.createElement("canvas");c.width=W;c.height=H;
     var g=c.getContext("2d");
     var T=function(s,x,y,size,col,al,w,mw){g.font=(w||700)+" "+size+"px "+FF;g.fillStyle=col;g.textAlign=al||"center";g.textBaseline="middle";if(mw)g.fillText(String(s),x,y,mw);else g.fillText(String(s),x,y)};
-    g.fillStyle="#0b1220";g.fillRect(0,0,W,H);
-    var ga=g.createLinearGradient(0,0,W*.6,0);ga.addColorStop(0,rgba(a.color,.5));ga.addColorStop(1,rgba(a.color,0));g.fillStyle=ga;g.fillRect(0,0,W,H);
-    var gb=g.createLinearGradient(W,0,W*.4,0);gb.addColorStop(0,rgba(b.color,.5));gb.addColorStop(1,rgba(b.color,0));g.fillStyle=gb;g.fillRect(0,0,W,H);
-    g.fillStyle="#74acdf";g.fillRect(0,0,W,8);g.fillStyle="#ffffff";g.fillRect(0,8,W,8);g.fillStyle="#74acdf";g.fillRect(0,16,W,8);
-    T(String(M.title||(a.name+" vs "+b.name)).toUpperCase(),W/2,70,34,"#eef2f7","center",700,1000);
-    [[a,r[0],200],[b,r[1],W-200]].forEach(function(x){
-      var t=x[0],im=x[1],cx=x[2],cy=250;
-      if(im){var k=Math.min(190/im.width,190/im.height);g.drawImage(im,cx-im.width*k/2,cy-im.height*k/2,im.width*k,im.height*k)}
-      else{g.beginPath();g.arc(cx,cy,85,0,6.2832);g.fillStyle=t.color;g.fill();T(initials(t.name),cx,cy+4,72,"#ffffff")}
-      T(t.name.toUpperCase(),cx,395,44,"#ffffff","center",700,340);
+    var rr=function(x,y,w,h,rad){g.beginPath();g.moveTo(x+rad,y);g.arcTo(x+w,y,x+w,y+h,rad);g.arcTo(x+w,y+h,x,y+h,rad);g.arcTo(x,y+h,x,y,rad);g.arcTo(x,y,x+w,y,rad);g.closePath()};
+    /* fondo + líneas de cancha */
+    g.fillStyle="#070d18";g.fillRect(0,0,W,H);
+    g.strokeStyle="rgba(255,255,255,.05)";g.lineWidth=3;g.strokeRect(30,30,W-60,H-60);
+    g.beginPath();g.moveTo(W/2,30);g.lineTo(W/2,H-30);g.stroke();g.beginPath();g.arc(W/2,H/2,110,0,6.2832);g.stroke();
+    /* bloques diagonales de cada equipo */
+    var ba=g.createLinearGradient(0,0,W*.55,0);ba.addColorStop(0,rgba(a.color,.7));ba.addColorStop(1,rgba(a.color,.12));
+    g.fillStyle=ba;g.beginPath();g.moveTo(0,84);g.lineTo(W*.56,84);g.lineTo(W*.46,330);g.lineTo(0,330);g.closePath();g.fill();
+    var bb=g.createLinearGradient(W,0,W*.45,0);bb.addColorStop(0,rgba(b.color,.7));bb.addColorStop(1,rgba(b.color,.12));
+    g.fillStyle=bb;g.beginPath();g.moveTo(W,84);g.lineTo(W*.44,84);g.lineTo(W*.54,330);g.lineTo(W,330);g.closePath();g.fill();
+    /* cinta celeste-blanca-celeste */
+    g.fillStyle=CEL;g.fillRect(0,0,W,8);g.fillStyle="#fff";g.fillRect(0,8,W,8);g.fillStyle=CEL;g.fillRect(0,16,W,8);
+    /* cabecera */
+    T("LTF · "+String(LEAGUE).replace(/^LTF\s*·?\s*/i,"").toUpperCase(),60,54,18,"#8da2bb","left",700);
+    T(dateStr(M.created_at),W-60,54,18,"#8da2bb","right",600);
+    var tag=M.round?"FECHA "+M.round:"AMISTOSO",tw=140;
+    rr(W/2-tw/2,36,tw,38,19);g.fillStyle="#0b1626";g.fill();g.lineWidth=2;g.strokeStyle=CEL;g.stroke();
+    T(tag,W/2,56,20,"#dcecff","center",800);
+    /* escudos, nombres y resultado */
+    [[a,r[0],190],[b,r[1],W-190]].forEach(function(x){
+      var t=x[0],im=x[1],cx=x[2],cy=185;
+      g.beginPath();g.arc(cx,cy,78,0,6.2832);g.fillStyle="rgba(7,13,24,.55)";g.fill();
+      if(im){var k=Math.min(124/im.width,124/im.height);g.drawImage(im,cx-im.width*k/2,cy-im.height*k/2,im.width*k,im.height*k)}
+      else{g.beginPath();g.arc(cx,cy,60,0,6.2832);g.fillStyle=t.color;g.fill();g.lineWidth=3;g.strokeStyle="rgba(255,255,255,.8)";g.stroke();T(initials(t.name),cx,cy+3,46,"#ffffff")}
+      T(t.name.toUpperCase(),cx,296,28,"#ffffff","center",800,330);
     });
-    T(M.s1+" : "+M.s2,W/2,250,170,"#ffffff","center",700);
-    var pw0=300,ph0=36,px0=W/2-pw0/2,py0=337;
-    g.beginPath();g.moveTo(px0+18,py0);g.arcTo(px0+pw0,py0,px0+pw0,py0+ph0,18);g.arcTo(px0+pw0,py0+ph0,px0,py0+ph0,18);g.arcTo(px0,py0+ph0,px0,py0,18);g.arcTo(px0,py0,px0+pw0,py0,18);g.closePath();
-    g.lineWidth=2;g.strokeStyle="rgba(116,172,223,.7)";g.stroke();
-    T("FINALIZADO · "+fmt(A.dur),W/2,py0+ph0/2+1,22,"#dcecff");
-    if(A.mvp)T("★ FIGURA: "+A.mvp.n+(A.mvp.r!=null?"  "+A.mvp.r.toFixed(1):""),W/2,405,30,"#dcecff","center",700,360);
-    var pw=340,px=W/2-pw/2,p1=A.poss[0];
-    g.fillStyle=a.color;g.fillRect(px,476,pw*p1/100,12);g.fillStyle=b.color;g.fillRect(px+pw*p1/100,476,pw*(100-p1)/100,12);
-    T(A.poss[0]+"%",px,456,26,"#ffffff","left");T("POSESIÓN",W/2,456,20,"#8a96a6");T(A.poss[1]+"%",px+pw,456,26,"#ffffff","right");
-    if(A.adv){var tt=totals(A);T("xG  "+tt[1].xg.toFixed(2)+"  –  "+tt[2].xg.toFixed(2),W/2,520,28,"#c9d4e2")}
-    var lines=function(tm){
+    T(M.s1,W/2-100,195,150,"#ffffff","center",800);T(M.s2,W/2+100,195,150,"#ffffff","center",800);
+    T("–",W/2,190,90,"rgba(255,255,255,.5)","center",600);
+    T("FINAL · "+fmt(A.dur),W/2,300,18,"#c9d6e6","center",700);
+    /* goleadores por equipo */
+    var scorers=function(tm){
       var o=[],by={};
-      A.goals.filter(function(q){return q.tm===tm}).forEach(function(q){var k=q.n+(q.og?"|ag":"");if(!by[k]){by[k]={n:q.n,og:q.og,t:[]};o.push(by[k])}by[k].t.push(fmt(q.t))});
-      var out=o.slice(0,4).map(function(x){return "⚽ "+x.n+(x.og?" (AG)":"")+" "+x.t.join(", ")});
-      if(o.length>4)out.push("+"+(o.length-4)+" más");
-      return out;
+      (A.goals||[]).filter(function(q){return q.tm===tm}).forEach(function(q){var k=q.n+(q.og?"|ag":"");if(!by[k]){by[k]={n:q.n,og:q.og,c:0};o.push(by[k])}by[k].c++});
+      return o.sort(function(x,y){return y.c-x.c});
     };
-    [[1,200],[2,W-200]].forEach(function(x){lines(x[0]).forEach(function(s,i){T(s,x[1],440+i*27,22,"#c9d4e2","center",600,360)})});
-    T(LEAGUE,36,604,22,"#8a96a6","left");T(dateStr(M.created_at),W-36,604,22,"#8a96a6","right");
+    var assists=function(tm){return (A.players||[]).filter(function(p){return p.tm===tm&&p.ast>0}).sort(function(x,y){return y.ast-x.ast}).slice(0,3).map(function(p){return p.n+(p.ast>1?" ×"+p.ast:"")}).join("  ·  ")};
+    [[1,a,60,"left"],[2,b,W-60,"right"]].forEach(function(x){
+      var tm=x[0],t=x[1],px=x[2],al=x[3],list=scorers(tm),max=6;
+      g.fillStyle=t.color;g.fillRect(al==="left"?px:px-48,366,48,5);
+      T("GOLEADORES",px,392,16,"#8da2bb",al,700);
+      list.slice(0,max).forEach(function(q,i){
+        var y=432+i*38;
+        var nm=q.n+(q.og?" (AG)":"");
+        if(q.c>1){
+          g.font="800 24px "+FF;var cw=g.measureText("×"+q.c).width;
+          if(al==="left"){g.font="700 26px "+FF;var nw=Math.min(240,g.measureText(nm).width);T(nm,px,y,26,"#ffffff","left",700,240);T("×"+q.c,px+nw+10,y,24,CEL,"left",800)}
+          else{T("×"+q.c,px,y,24,CEL,"right",800);T(nm,px-cw-10,y,26,"#ffffff","right",700,240)}
+        }else T(nm,px,y,26,"#ffffff",al,700,260);
+      });
+      if(list.length>max)T("+"+(list.length-max)+" más",px,432+max*38,18,"#8da2bb",al,600);
+      var as=assists(tm);
+      if(as){T("ASISTENCIAS",px,628,14,"#8da2bb",al,700);T(as,px,650,20,"#c9d6e6",al,600,340)}
+    });
+    /* centro: figura del partido + estadísticas */
+    if(A.mvp){
+      var cx=W/2,cy=455;
+      g.beginPath();g.arc(cx,cy,66,0,6.2832);g.fillStyle="rgba(245,197,66,.1)";g.fill();g.lineWidth=4;g.strokeStyle=GOLD;g.stroke();
+      T("★ FIGURA",cx,375,16,GOLD,"center",800);
+      T(A.mvp.r!=null?A.mvp.r.toFixed(1):"–",cx,cy+2,56,GOLD,"center",800);
+      T(String(A.mvp.n).toUpperCase(),cx,543,26,"#ffffff","center",800,320);
+    }
+    var pw=300,px0=W/2-pw/2,p1=A.poss[0];
+    T(A.poss[0]+"%",px0,590,20,"#fff","left",800);T("POSESIÓN",W/2,590,15,"#8da2bb","center",700);T(A.poss[1]+"%",px0+pw,590,20,"#fff","right",800);
+    g.fillStyle=a.color;rr(px0,604,pw*p1/100,10,5);g.fill();g.fillStyle=b.color;rr(px0+pw*p1/100,604,pw*(100-p1)/100,10,5);g.fill();
+    if(A.adv){var tt=totals(A);T("xG  "+tt[1].xg.toFixed(2)+"  –  "+tt[2].xg.toFixed(2),W/2,642,20,"#c9d6e6","center",700)}
+    /* pie */
+    g.fillStyle=CEL;g.fillRect(0,H-16,W,8);g.fillStyle="#fff";g.fillRect(0,H-8,W,8);
     return new Promise(function(ok){c.toBlob(function(x){ok(x)},"image/png")});
   });
 }
