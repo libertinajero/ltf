@@ -164,6 +164,10 @@ svg.mom{display:block;width:100%;height:auto}
 .gl .who b{display:block;overflow-wrap:anywhere}
 .gl .who span{font-size:13px;color:var(--muted)}
 .gl .sc{font-family:var(--display);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+#vbox .vch,#vbox.fs .vch,#vbox.fs.idle .vch,#vbox.fs.hb .vch{left:auto;right:14px;top:46px;bottom:auto;max-width:min(260px,30%);align-items:flex-end;gap:2px;font-size:12px}
+#vbox .vch p{background:none;padding:0;border-radius:0;text-align:right;text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.6)}
+#vbox .vch p b{color:var(--celeste);margin-right:4px}
+#vbox.fs .vch{font-size:14px}
 details.panel summary{cursor:pointer;font-weight:600}
 .chatl{display:flex;flex-direction:column;gap:3px;max-height:460px;overflow:auto;font-size:14px}
 .chatl p{margin:0;overflow-wrap:anywhere}
@@ -1731,7 +1735,7 @@ function tabRep(M){
         '<div class="vbar"><div class="vtl"><div class="pbar"><label for="vr" class="sr">Línea de tiempo</label><input id="vr" type="range" min="0" max="'+(RP.maxF||1)+'" value="0"><div id="vm" class="marks"></div></div><span id="vt" class="vt">0:00</span></div>'+
     '<div class="vrow"><div class="vg"><small>Cámara</small><span class="zms" title="Distancia de la cámara (teclas 1 al 5)">'+[1,2,3,4,5].map(function(n){return '<button type="button" data-z="'+n+'"'+(RP.zoom===n?' class="on"':"")+'>'+n+'</button>'}).join("")+'</span><button type="button" id="vcb" title="Mostrar u ocultar el chat">💬</button><select id="vpv" title="Seguir a un jugador (su punto de vista)" aria-label="Seguir a un jugador"><option value="">Cámara libre</option></select></div>'+
     '<div class="vg vmid"><button type="button" id="vz" title="Volver al inicio">⏮</button><button type="button" id="vgp" title="Gol anterior">◀⚽</button><button type="button" id="vp" class="vplay" aria-label="Reproducir o pausar">▶</button><button type="button" id="vgn" title="Siguiente gol (G)">⚽▶</button></div>'+
-    '<div class="vg"><button type="button" id="vex" title="Extrapolación: adelanta la imagen unos milisegundos, como el juego en vivo">Extra <b id="vexv">0</b></button><button type="button" id="vclip" title="Graba un clip desde este momento">✂ Clip</button><select id="vclipd" title="Duración del clip" aria-label="Duración del clip">'+[5,10,15,30,60,120].map(function(n){return '<option value="'+n+'"'+(n===(RP.clipSec||10)?" selected":"")+'>'+(n<60?n+" s":(n/60)+" min")+'</option>'}).join("")+'</select><span class="spd"><button type="button" id="vsm" title="Más lento">−</button><b id="vsl">1x</b><button type="button" id="vsp" title="Más rápido">+</button></span><button type="button" id="vf" title="Pantalla completa">⛶</button></div></div>'+
+    '<div class="vg"><button type="button" id="vclip" title="Graba un clip desde este momento">✂ Clip</button><select id="vclipd" title="Duración del clip" aria-label="Duración del clip">'+[5,10,15,30,60,120].map(function(n){return '<option value="'+n+'"'+(n===(RP.clipSec||10)?" selected":"")+'>'+(n<60?n+" s":(n/60)+" min")+'</option>'}).join("")+'</select><span class="spd"><button type="button" id="vsm" title="Más lento">−</button><b id="vsl">1x</b><button type="button" id="vsp" title="Más rápido">+</button></span><button type="button" id="vf" title="Pantalla completa">⛶</button></div></div>'+
     '<div class="vkeys"><span><kbd>Espacio</kbd> play</span><span><kbd>G</kbd> próximo gol</span><span><kbd>1</kbd>–<kbd>5</kbd> cámara</span><span><kbd>H</kbd> ocultar barra</span><span><kbd>Esc</kbd> salir</span></div></div></div>'+
     '<p class="note" id="ve">Cargando el motor de HaxBall…</p></div>';
 }
@@ -1785,7 +1789,7 @@ function mkRend(){
   try{
     var rd=new RP.Ctor(API,{canvas:c,images:{grass:tex("#718c5a"),concrete:tex("#5d636b"),concrete2:tex("#3a3e44")},paintGame:true});
     Object.defineProperty(rd,"room",{writable:true,configurable:true,value:{
-      extrapolate:function(ms,f){try{return r.extrapolate?r.extrapolate(RP.ext>0?RP.ext:ms,f):r.state}catch(e){return r.state}},
+      extrapolate:function(ms,f){try{return r.extrapolate?r.extrapolate(ms,f):r.state}catch(e){return r.state}},
       get currentPlayerId(){return RP.pov!=null?RP.pov:r.currentPlayerId},librariesMap:null}});
     rd.followMode=false;rd.initialize();rd.__c=c;RP.rend=rd;RP.err="";
   }catch(e){RP.rend=null;RP.err="no se pudo crear el visor ("+((e&&e.message)||e)+")"}
@@ -1814,7 +1818,7 @@ function fitZoom(){
   var w=(sd.bgWidth||0)+70,h=(sd.bgHeight||0)+70;
   if(w<=70||h<=70){w=sd.width||0;h=sd.height||0}
   if(!(w>0&&h>0)||!c.clientWidth||!c.clientHeight)return;
-  var zi=RP.pov!=null&&RP.zoom<2?2:RP.zoom,z=Math.min(c.clientWidth/(2*w),c.clientHeight/(2*h))*ZM[zi-1],fm=zi>1;
+  var pv=RP.pov!=null,zi=RP.zoom,z=Math.min(c.clientWidth/(2*w),c.clientHeight/(2*h))*(pv?ZP[zi-1]:ZM[zi-1]),fm=pv||zi>1;
   if(d.followMode!==fm)d.followMode=fm;
   if(Math.abs(z-d.zoomCoeff)>0.001)d.zoomCoeff=z;
 }
@@ -1870,7 +1874,7 @@ function chatOverlay(f,ck){
     key=vis.map(function(x){return x.i+":"+x.t}).join("|");
   }
   if(key===RP.ck)return;RP.ck=key;
-  vis.forEach(function(x){html+='<p><b>'+esc(x.n)+':</b> '+esc(x.m)+'</p>'});
+  vis.forEach(function(x,k){html+='<p style="opacity:'+(.45+.55*(k+1)/vis.length).toFixed(2)+'"><b>'+esc(x.n)+'</b> '+esc(x.m)+'</p>'});
   box.innerHTML=html;
 }
 function tick(){
@@ -1889,7 +1893,7 @@ function tick(){
   q=$("sq1");if(q&&ca)q.style.background=ca.color;q=$("sq2");if(q&&cb)q.style.background=cb.color;q=$("sbt");if(q)q.textContent=fmtMs(ck!=null?ck:RP.gt/60);
   RP.raf=requestAnimationFrame(tick);
 }
-var SPD=[0.25,0.5,1,2,4,8],ZM=[1,1.6,2.3,3.2,4.5];
+var SPD=[0.25,0.5,1,2,4,8],ZM=[1,1.6,2.3,3.2,4.5],ZP=[1.2,1.6,2.3,3.2,4.5]; /* ZM: cámara libre (la 1 muestra toda la cancha). ZP: siguiendo a un jugador */
 function gFrame(g,kf){return Math.max(0,Math.min(RP.maxF,typeof g.f==="number"?g.f:kf+Math.round(g.t*60)))}
 function goalFrames(){
   var A=CM&&CM.A;if(!A||RP.maxF<2)return [];
@@ -1904,6 +1908,11 @@ function jumpGoal(d){
 }
 /* El visor solo recalculaba la cámara al pausar o al mover la línea de tiempo (en los dos casos cambia la velocidad del lector).
    Al cambiar de cámara se hace lo mismo a propósito: se frena un cuadro y se vuelve al mismo frame, y la reproducción sigue sola. */
+function povApply(){
+  if(!RP.r||RP.mk)return;
+  mkRend();
+  camRefresh();
+}
 function camRefresh(){
   var r=RP.r;if(!r||RP.mk)return;
   try{fitZoom();if(RP.rend)RP.rend.render()}catch(e){}
@@ -1995,9 +2004,7 @@ function wireViewer(){
   };
   $("vcb").onclick=function(){RP.chatOn=!RP.chatOn;RP.ck="x";this.style.opacity=RP.chatOn?"":".5"};
   $("vcb").style.opacity=RP.chatOn?"":".5";
-  $("vpv").onchange=function(){RP.pov=this.value===""?null:+this.value;RP.plSig="";var q=$("ve");if(q&&RP.pov!=null)q.textContent="";camRefresh()};
-  var EXT=[0,50,110,200];
-  $("vex").onclick=function(){RP.ext=EXT[(EXT.indexOf(RP.ext)+1)%EXT.length];$("vexv").textContent=RP.ext};
+  $("vpv").onchange=function(){RP.pov=this.value===""?null:+this.value;RP.plSig="";var q=$("ve");if(q&&RP.pov!=null)q.textContent="";povApply()};
   $("vclip").onclick=clipToggle;$("vclipd").onchange=function(){RP.clipSec=+this.value};
   povList();
   var vbx=$("vbox"),idleT=0,wake=function(){vbx.classList.remove("idle");clearTimeout(idleT);idleT=setTimeout(function(){if(document.fullscreenElement||document.webkitFullscreenElement)vbx.classList.add("idle")},3000)};
