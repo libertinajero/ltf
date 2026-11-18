@@ -1908,23 +1908,14 @@ function jumpGoal(d){
 }
 /* El visor solo recalculaba la cámara al pausar o al mover la línea de tiempo (en los dos casos cambia la velocidad del lector).
    Al cambiar de cámara se hace lo mismo a propósito: se frena un cuadro y se vuelve al mismo frame, y la reproducción sigue sola. */
-function povApply(){
-  if(!RP.r||RP.mk)return;
-  mkRend();
-  camRefresh();
-}
+/* Al cambiar de cámara se vuelve a crear el visor sobre el mismo momento del replay (no se toca la reproducción ni la velocidad). */
 function camRefresh(){
   var r=RP.r;if(!r||RP.mk)return;
+  mkRend();
   try{fitZoom();if(RP.rend)RP.rend.render()}catch(e){}
-  if(!RP.playing||RP.seek!=null)return;
-  try{r.setSpeed(0)}catch(e){return}
-  requestAnimationFrame(function(){
-    if(RP.r!==r||!RP.playing||RP.seek!=null)return;
-    var f=r.getCurrentFrameNo();RP.seek=f;
-    try{r.setSpeed(60);r.setCurrentFrameNo(f)}catch(e){RP.seek=null;try{r.setSpeed(RP.speed)}catch(_){}}
-    kick();
-  });
+  kick();
 }
+function povApply(){camRefresh()}
 function setZoom(n){
   RP.zoom=Math.max(1,Math.min(5,n));
   var bs=document.querySelectorAll(".zms button");
