@@ -2360,7 +2360,7 @@ function saveUpload(){
   var withReplay=up.buf&&up.buf.byteLength<=2000000;
   if(withReplay)payload.replay=b64enc(up.buf);
   (pub?api.rpc("add_match_open",{p:payload}):api.rpc("add_match",{code:S.code,p:payload})).then(function(id){
-    postCard(Object.assign({},M,{id:id,title:title,round:+up.round||null,created_at:new Date().toISOString()}),id);if(up.file)api.rpc("link_match_roster",{p_match:id,p_file:up.file}).catch(function(){});S.up=blankUp();S.banner="saved";
+    if(t1&&t2)postCard(Object.assign({},M,{id:id,title:title,round:+up.round||null,created_at:new Date().toISOString()}),id);if(up.file)api.rpc("link_match_roster",{p_match:id,p_file:up.file}).catch(function(){});S.up=blankUp();S.banner="saved";
     return loadAll(true).then(function(){location.hash="partido-"+id});
   }).catch(function(err){
     up.busy=false;up.bad=true;
